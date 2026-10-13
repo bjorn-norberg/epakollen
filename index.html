@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>EPAkollen</title>
+  <meta name="description" content="Räkna ut restid, ankomst och bränslekostnad för din EPA-traktor. Max 30 km/h, inga motorvägar.">
+  <meta name="theme-color" content="#0E0B1A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EPAkollen">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M32 6 60 56H4Z" fill="var(--orange)" stroke="var(--red)" stroke-width="5" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <h1>EPA<span>kollen</span></h1>
+          <p class="tag">Restid &amp; kostnad för din EPA</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="card" aria-labelledby="h-trip">
+      <h2 id="h-trip"><span class="num">1</span> Vart ska du?
+        <span class="status" id="status" role="status" hidden>Räknar…</span>
+      </h2>
+
+      <div class="route">
+        <div class="route-box">
+          <div class="route-row">
+            <span class="dot dot-from" aria-hidden="true"></span>
+            <label for="from" class="sr-only">Från</label>
+            <input id="from" type="text" autocomplete="off" placeholder="Startplats" enterkeyhint="next">
+            <button type="button" id="locate" class="locate" aria-label="Använd min position">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" class="fill"/><circle cx="12" cy="12" r="7.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>
+              <span>Min plats</span>
+            </button>
+            <ul class="suggest" id="from-suggest" role="listbox" hidden></ul>
+          </div>
+          <div class="route-row">
+            <span class="dot dot-to" aria-hidden="true"></span>
+            <label for="to" class="sr-only">Till</label>
+            <input id="to" type="text" autocomplete="off" placeholder="Vart ska du?" enterkeyhint="go">
+            <ul class="suggest" id="to-suggest" role="listbox" hidden></ul>
+          </div>
+        </div>
+        <button type="button" id="swap" class="swap" aria-label="Byt plats på från och till">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>
+        </button>
+      </div>
+      <p class="error" id="error" role="alert" hidden></p>
+
+      <div class="field">
+        <span class="label" id="route-label">Vägval</span>
+        <div class="segmented segmented-sm" role="radiogroup" aria-labelledby="route-label">
+          <button type="button" role="radio" aria-checked="true" data-route="kortast">Kortast</button>
+          <button type="button" role="radio" aria-checked="false" data-route="lugnast">Lugnast</button>
+        </div>
+        <p class="hint" id="route-hint"></p>
+      </div>
+
+      <div class="field">
+        <label for="depart">Avresa</label>
+        <div class="depart-row">
+          <input id="depart" type="time">
+          <button type="button" id="now" class="chip">Nu</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-car">
+      <h2 id="h-car"><span class="num">2</span> Din EPA</h2>
+
+      <div class="field">
+        <span class="label" id="fuel-label">Bränsle</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="fuel-label">
+          <button type="button" role="radio" aria-checked="true" data-fuel="bensin">Bensin</button>
+          <button type="button" role="radio" aria-checked="false" data-fuel="diesel">Diesel</button>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label for="consumption">Förbrukning</label>
+          <div class="select-wrap">
+            <select id="consumption"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="price">Pris kr/l</label>
+          <input id="price" type="number" inputmode="decimal" step="0.01" min="0">
+        </div>
+      </div>
+      <p class="price-note" id="price-note">Hämtar dagens pris…</p>
+    </section>
+
+    <div class="empty" id="empty" aria-hidden="true">
+      <svg viewBox="0 0 64 64"><path d="M32 6 60 56H4Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-dasharray="6 6"/></svg>
+      <p>Fyll i vart du ska<br>så ritar vi upp resan här.</p>
+    </div>
+
+    <section class="results" id="results" hidden aria-live="polite">
+      <div class="map" id="map"></div>
+
+      <div class="big-cost">
+        <span class="label">Kostar dig</span>
+        <strong id="r-cost">–</strong>
+        <span class="sub" id="r-fuel">–</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span class="label">Sträcka</span><strong id="r-dist">–</strong></div>
+        <div class="stat"><span class="label">Restid</span><strong id="r-time">–</strong><span class="sub" id="r-songs"></span></div>
+        <div class="stat stat-wide"><span class="label">Framme</span><strong id="r-arrive">–</strong><span class="sub" id="r-day"></span></div>
+      </div>
+      <div class="nav">
+        <a class="nav-btn" id="nav-google" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 21 3l-8 18-2-8Z"/></svg>
+          Starta navigering
+        </a>
+        <a class="nav-alt" id="nav-apple" href="#" hidden>Öppna i Apple Kartor istället</a>
+        <p class="nav-note" id="nav-note">Öppnar Google Maps med "undvik motorvägar" och några punkter längs din rutt, så att den följer samma väg. Kartappens restid gäller bil – lita på tiden här.</p>
+      </div>
+
+      <p class="fine">Räknat på 30 km/h hela vägen, utan pauser. Rutten undviker motorväg och motortrafikled – kolla alltid skyltarna själv.</p>
+    </section>
+
+    <footer class="foot">
+      Karta © Esri, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · Rutt: Valhalla · Pris: bensinpriser.nu
+    </footer>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="prices.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
