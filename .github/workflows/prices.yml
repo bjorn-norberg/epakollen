@@ -12,11 +12,9 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: python scripts/update_prices.py
+      - uses: actions/checkout@v5
+      # Python 3 finns förinstallerat på GitHubs Ubuntu-maskiner
+      - run: python3 scripts/update_prices.py
       - name: Commit om priserna ändrats
         run: |
           git config user.name "price-bot"
