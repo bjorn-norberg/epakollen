@@ -47,7 +47,7 @@ a { color: var(--lime); }
 
 /* Header */
 .brand { display: flex; align-items: center; gap: 14px; margin: 4px 2px 22px; }
-.logo { width: 46px; height: 46px; flex: none; filter: drop-shadow(0 4px 14px rgba(255, 122, 26, .45)); }
+.logo { width: 52px; height: 52px; flex: none; border-radius: 12px; box-shadow: 0 6px 18px rgba(255, 79, 163, .3), 0 0 0 1px var(--line); }
 h1 {
   margin: 0;
   font: 800 34px/1 var(--font-display);
