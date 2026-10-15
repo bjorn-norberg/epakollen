@@ -550,6 +550,8 @@
     const isInApp = /FBAN|FBAV|Instagram|Snapchat|TikTok|musical_ly|Line\//i.test(ua);
     const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
     let deferredPrompt = null;
+    const isMobile = isIOS || isAndroid || /Mobile/i.test(ua);
+    if (!isMobile) $("install-sub").textContent = "Eget fönster och snabbare start";
 
     function dismissedRecently() {
       try {
@@ -599,6 +601,7 @@
     });
     window.addEventListener("appinstalled", hide);
 
+    // Chrome/Edge (mobil och dator) visar rutan när beforeinstallprompt kommer ovan.
     // iPhone har ingen installationshändelse – visa rutan direkt.
     // Android-webbläsare utan beforeinstallprompt (t.ex. Firefox) får guiden efter en kort stund.
     if (isIOS) show();

@@ -415,7 +415,8 @@ body.has-install .app { padding-bottom: calc(env(safe-area-inset-bottom) + 100px
   font: 800 18px/1 var(--font-display);
 }
 
-@media (min-width: 900px) { .install { display: none !important; } }
+/* Dator: Chrome/Edge kan installera sidan som app – smalare ruta, centrerad längst ner */
+@media (min-width: 900px) { .install { max-width: 440px; bottom: 20px; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
