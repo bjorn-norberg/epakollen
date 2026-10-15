@@ -143,6 +143,37 @@
     </footer>
   </main>
 
+  <!-- Flytande "Installera som app" – bara på mobil, döljs när appen redan är installerad -->
+  <div class="install" id="install" hidden>
+    <button type="button" class="install-main" id="install-btn">
+      <img src="icons/icon-192.png" alt="" width="40" height="40">
+      <span class="install-text">
+        <strong>Installera som app</strong>
+        <small>Ligger på hemskärmen – öppnas direkt</small>
+      </span>
+      <span class="install-go">Installera</span>
+    </button>
+    <button type="button" class="install-close" id="install-close" aria-label="Stäng">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
+  <dialog class="sheet" id="install-sheet" aria-labelledby="sheet-title">
+    <h2 id="sheet-title">Lägg till på hemskärmen</h2>
+    <ol class="steps" id="steps-ios" hidden>
+      <li>Tryck på <b>Dela</b> <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg> i Safari – längst ner i mitten, eller under <b>···</b> uppe till höger/nere till höger.</li>
+      <li>Scrolla ner och välj <b>Lägg till på hemskärmen</b> <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg></li>
+      <li>Tryck <b>Lägg till</b> uppe till höger. Klart!</li>
+    </ol>
+    <ol class="steps" id="steps-android" hidden>
+      <li>Tryck på menyn <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg> uppe till höger i webbläsaren.</li>
+      <li>Välj <b>Installera app</b> eller <b>Lägg till på startskärmen</b>.</li>
+      <li>Tryck <b>Installera</b>. Klart!</li>
+    </ol>
+    <p class="sheet-note" id="sheet-inapp" hidden>Du verkar ha öppnat länken inne i en annan app (t.ex. Instagram eller Snapchat). Öppna den i <b>Safari</b> eller <b>Chrome</b> först – det går inte att installera härifrån.</p>
+    <button type="button" class="sheet-ok" id="sheet-ok">Fattar!</button>
+  </dialog>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="prices.js"></script>
   <script src="app.js"></script>

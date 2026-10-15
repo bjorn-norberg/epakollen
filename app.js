@@ -536,6 +536,75 @@
   setFuel(state.fuel);
   loadPrices();
 
+  // ---------- Installera som app ----------
+  // Android/Chrome: knappen öppnar telefonens egen installationsruta direkt (beforeinstallprompt).
+  // iPhone: Apple tillåter inte det – där visas en kort guide till Dela → Lägg till på hemskärmen.
+  (() => {
+    const DISMISS_KEY = "epakollen:install-dismissed";
+    const DISMISS_DAYS = 30;
+    const banner = $("install");
+    const sheet = $("install-sheet");
+    const ua = navigator.userAgent;
+    const isIOS = IS_IOS;
+    const isAndroid = /Android/i.test(ua);
+    const isInApp = /FBAN|FBAV|Instagram|Snapchat|TikTok|musical_ly|Line\//i.test(ua);
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    let deferredPrompt = null;
+
+    function dismissedRecently() {
+      try {
+        const t = Number(localStorage.getItem(DISMISS_KEY));
+        return t && Date.now() - t < DISMISS_DAYS * 864e5;
+      } catch { return false; }
+    }
+    function show() {
+      if (standalone || dismissedRecently() || location.protocol === "file:") return;
+      banner.hidden = false;
+      document.body.classList.add("has-install");
+    }
+    function hide() {
+      banner.hidden = true;
+      document.body.classList.remove("has-install");
+    }
+
+    $("install-close").addEventListener("click", () => {
+      try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch { /* ignorera */ }
+      hide();
+    });
+
+    $("install-btn").addEventListener("click", async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (outcome === "accepted") hide();
+        return;
+      }
+      $("steps-ios").hidden = !isIOS;
+      $("steps-android").hidden = isIOS;
+      $("sheet-inapp").hidden = !isInApp;
+      if (sheet.showModal) sheet.showModal(); else sheet.setAttribute("open", "");
+    });
+    $("sheet-ok").addEventListener("click", () => sheet.close ? sheet.close() : sheet.removeAttribute("open"));
+    // Klick på den mörka bakgrunden utanför rutan stänger den
+    sheet.addEventListener("click", (e) => {
+      const r = sheet.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) sheet.close();
+    });
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      show();
+    });
+    window.addEventListener("appinstalled", hide);
+
+    // iPhone har ingen installationshändelse – visa rutan direkt.
+    // Android-webbläsare utan beforeinstallprompt (t.ex. Firefox) får guiden efter en kort stund.
+    if (isIOS) show();
+    else if (isAndroid) setTimeout(() => { if (!deferredPrompt) show(); }, 2500);
+  })();
+
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
     window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   }

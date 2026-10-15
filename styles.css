@@ -340,6 +340,83 @@ select option { background: #241C44; }
 }
 @media (max-width: 899px) { .empty { display: none; } }
 
+/* ---------- Installera som app ---------- */
+.install {
+  position: fixed; z-index: 2000;
+  left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom) + 12px);
+  display: flex; align-items: center;
+  max-width: 496px; margin: 0 auto;
+  background: #2A2150; border: 1px solid var(--line); border-radius: 20px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .55), 0 0 0 1px rgba(212, 255, 58, .08);
+  animation: slide-up .35s ease-out;
+}
+.install[hidden] { display: none; }
+@keyframes slide-up { from { transform: translateY(120%); } }
+.install-main {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 4px 10px 10px;
+  background: none; border: 0; text-align: left;
+}
+.install-main img { flex: none; border-radius: 10px; }
+.install-text { flex: 1; min-width: 0; }
+.install-text strong { display: block; font: 700 15.5px/1.2 var(--font-display); white-space: nowrap; }
+.install-text small { display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.install-go {
+  flex: none; padding: 9px 12px; border-radius: 12px;
+  background: var(--lime); color: var(--lime-ink);
+  font-weight: 800; font-size: 13.5px;
+}
+.install-close {
+  flex: none; width: 40px; height: 56px;
+  display: grid; place-items: center;
+  background: none; border: 0; color: var(--muted);
+}
+.install-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+/* Plats för rutan så att den inte döljer slutet av sidan */
+body.has-install .app { padding-bottom: calc(env(safe-area-inset-bottom) + 100px); }
+
+.sheet {
+  width: min(100% - 24px, 460px); margin: auto auto calc(env(safe-area-inset-bottom) + 12px);
+  padding: 22px 20px 18px;
+  background: #241C44; color: var(--text);
+  border: 1px solid var(--line); border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+}
+.sheet::backdrop { background: rgba(8, 6, 16, .7); }
+.sheet h2 { margin: 0 0 14px; font: 800 22px/1.15 var(--font-display); }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.steps[hidden] { display: none; }
+.steps li {
+  counter-increment: step; position: relative;
+  padding: 0 0 14px 42px; font-size: 15.5px; line-height: 1.45;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: -2px;
+  width: 28px; height: 28px; border-radius: 9px;
+  display: grid; place-items: center;
+  background: var(--pink); color: #fff; font: 800 14px/1 var(--font-display);
+}
+.steps .ico {
+  display: inline-block; width: 22px; height: 22px; vertical-align: -5px;
+  padding: 2px; border-radius: 6px; background: rgba(255, 255, 255, .1);
+  fill: none; stroke: var(--cyan); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.steps .ico circle { fill: var(--cyan); stroke: none; }
+.sheet-note {
+  margin: 0 0 14px; padding: 10px 12px; border-radius: 12px;
+  background: rgba(255, 122, 26, .15); color: #FFD9BF; font-size: 14px;
+}
+.sheet-note[hidden] { display: none; }
+.sheet-ok {
+  width: 100%; height: 52px; border: 0; border-radius: 16px;
+  background: var(--lime); color: var(--lime-ink);
+  font: 800 18px/1 var(--font-display);
+}
+
+@media (min-width: 900px) { .install { display: none !important; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
