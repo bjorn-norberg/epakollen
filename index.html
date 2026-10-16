@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
   <main class="app">
@@ -68,6 +68,7 @@
             <span class="dot dot-from" aria-hidden="true"></span>
             <label for="from" class="sr-only">Från</label>
             <input id="from" type="text" autocomplete="off" placeholder="Startplats" enterkeyhint="next">
+            <button type="button" class="clear" data-clear="from" aria-label="Töm startplats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
             <button type="button" id="locate" class="locate" aria-label="Använd min position">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" class="fill"/><circle cx="12" cy="12" r="7.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>
               <span>Min plats</span>
@@ -78,6 +79,7 @@
             <span class="dot dot-to" aria-hidden="true"></span>
             <label for="to" class="sr-only">Till</label>
             <input id="to" type="text" autocomplete="off" placeholder="Vart ska du?" enterkeyhint="go">
+            <button type="button" class="clear" data-clear="to" aria-label="Töm destination"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
             <ul class="suggest" id="to-suggest" role="listbox" hidden></ul>
           </div>
         </div>
@@ -205,7 +207,7 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="prices.js"></script>
-  <script src="app.js"></script>
+  <script src="prices.js?v=14"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

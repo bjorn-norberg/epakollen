@@ -206,6 +206,16 @@
     input.setAttribute("aria-controls", list.id);
     input.setAttribute("aria-autocomplete", "list");
 
+    // Markera hela texten när man trycker i fältet – första bokstaven ersätter då hela det gamla ortnamnet.
+    // (setTimeout behövs för iPhone/Safari, som annars placerar markören efter markeringen.)
+    input.addEventListener("focus", () => {
+      setTimeout(() => { if (document.activeElement === input) input.select(); }, 0);
+    });
+    // Utan detta avmarkerar mus-/fingerklicket direkt texten igen på datorn
+    input.addEventListener("mouseup", (e) => {
+      if (input.selectionStart === 0 && input.selectionEnd === input.value.length) e.preventDefault();
+    });
+
     input.addEventListener("input", () => {
       state.places[key] = null;
       markStale();
@@ -234,6 +244,17 @@
     }, 120));
     return () => { clearTimeout(timer); ctrlSeq++; items = []; close(); };
   }
+  // ×-knappen: töm fältet och ställ markören där, redo för en ny ort
+  document.querySelectorAll("[data-clear]").forEach((btn) => {
+    const input = els[btn.dataset.clear];
+    btn.addEventListener("pointerdown", (e) => e.preventDefault()); // behåll fokus/tangentbord
+    btn.addEventListener("click", () => {
+      input.value = "";
+      input.dispatchEvent(new Event("input")); // nollställer vald plats och tonar ner gammalt resultat
+      input.focus();
+    });
+  });
+
   const cancelSuggest = [
     setupAutocomplete("from", els.from, els.fromSuggest),
     setupAutocomplete("to", els.to, els.toSuggest),

@@ -148,7 +148,18 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 .locate svg .fill { fill: currentColor; stroke: none; }
 .locate:active { background: rgba(212, 255, 58, .25); }
 .locate.busy svg { animation: spin 1s linear infinite; }
-.route-row input:not(:placeholder-shown) + .locate span { display: none; }
+.route-row input:not(:placeholder-shown) ~ .locate span { display: none; }
+
+/* Töm-knapp (×) – syns bara när fältet har text */
+.clear {
+  flex: none; width: 36px; height: 36px; margin-right: 6px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 50%;
+  background: rgba(255, 255, 255, .08); color: var(--muted);
+}
+.clear svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+.clear:active { background: rgba(255, 255, 255, .16); color: var(--text); }
+.route-row input:placeholder-shown ~ .clear { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .swap {
