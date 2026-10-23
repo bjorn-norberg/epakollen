@@ -31,6 +31,62 @@
     "author": {"@type": "Person", "@id": "https://junestaden.se/#person", "name": "Björn Norberg", "url": "https://junestaden.se/", "image": "https://bygg.junestaden.se/img/profil.jpg", "jobTitle": "Student, VVS-ingenjör", "homeLocation": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": "Jönköping", "addressCountry": "SE"}}, "affiliation": {"@type": "CollegeOrUniversity", "name": "TUC Yrkeshögskola"}, "sameAs": ["https://www.linkedin.com/in/bj%C3%B6rn-norberg-088992345"]}
   }
   </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Får en EPA-traktor köra på riksvägar?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ja. En EPA eller A-traktor får köra på alla vägar utom motorväg och motortrafikled. EPAkollen väljer bara vägar där det är tillåtet enligt kartdatan från OpenStreetMap. Kartdata kan ibland vara fel, så följ alltid skyltarna."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Vad är skillnaden mellan Kortast och Lugnast?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Kortast tar den kortaste vägen och kan använda större vägar, till exempel riksvägar. Lugnast föredrar mindre vägar med lugnare trafik och blir oftast lite längre."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Hur räknas restid och kostnad?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Restiden räknas på 30 km/h hela vägen, utan pauser. Kostnaden är sträckan i mil gånger förbrukningen gånger bränslepriset. Priset är rikssnittet för 95 (E10) eller diesel från bensinpriser.nu och uppdateras två gånger per dag. Du kan också skriva in ditt eget pris."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Varför går det inte att räkna längre än ungefär 20 mil?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ruttjänsten som EPAkollen använder är gratis och klarar sträckor upp till ungefär 20 mil fågelvägen. Längre resor kan du dela upp i två delar. I 30 km/h tar 20 mil ändå runt sju timmar."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Kan jag installera EPAkollen som app?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ja. På iPhone öppnar du sidan i Safari, trycker på Dela och väljer Lägg till på hemskärmen. På Android öppnar du menyn i Chrome och väljer Installera app. På datorn kan du installera den från Chrome eller Edge."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Vad kostar EPAkollen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ingenting. EPAkollen är gratis och du behöver inget konto."
+      }
+    }
+  ]
+}
+  </script>
   <meta name="theme-color" content="#0E0B1A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -44,137 +100,171 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=19">
+  <link rel="stylesheet" href="styles.css?v=20">
 </head>
 <body>
   <main class="app">
-    <header class="top">
-      <div class="brand">
-        <img class="logo" src="icons/icon.svg?v=2" alt="" width="46" height="46">
-        <div>
-          <h1>EPA<span>kollen</span></h1>
-          <p class="tag">Restid &amp; kostnad för din EPA</p>
-        </div>
-      </div>
-    </header>
-
-    <section class="card" aria-labelledby="h-trip">
-      <h2 id="h-trip"><span class="num">1</span> Vart ska du?
-        <span class="status" id="status" role="status" hidden>Räknar…</span>
-      </h2>
-
-      <div class="route">
-        <div class="route-box">
-          <div class="route-row">
-            <span class="dot dot-from" aria-hidden="true"></span>
-            <label for="from" class="sr-only">Från</label>
-            <input id="from" type="text" autocomplete="off" placeholder="Startplats" enterkeyhint="next">
-            <button type="button" class="clear" data-clear="from" aria-label="Töm startplats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
-            <button type="button" id="locate" class="locate" aria-label="Använd min position">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" class="fill"/><circle cx="12" cy="12" r="7.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>
-              <span>Min plats</span>
-            </button>
-            <ul class="suggest" id="from-suggest" role="listbox" hidden></ul>
-          </div>
-          <div class="route-row">
-            <span class="dot dot-to" aria-hidden="true"></span>
-            <label for="to" class="sr-only">Till</label>
-            <input id="to" type="text" autocomplete="off" placeholder="Vart ska du?" enterkeyhint="go">
-            <button type="button" class="clear" data-clear="to" aria-label="Töm destination"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
-            <ul class="suggest" id="to-suggest" role="listbox" hidden></ul>
+    <div class="panel" id="panel">
+      <header class="top">
+        <div class="brand">
+          <img class="logo" src="icons/icon.svg?v=2" alt="" width="46" height="46">
+          <div>
+            <h1>EPA<span>kollen</span></h1>
+            <p class="tag">Restid &amp; kostnad för din EPA</p>
           </div>
         </div>
-        <button type="button" id="swap" class="swap" aria-label="Byt plats på från och till">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>
-        </button>
-      </div>
-      <p class="error" id="error" role="alert" hidden></p>
+      </header>
 
-      <div class="field">
-        <span class="label" id="route-label">Vägval</span>
-        <div class="segmented segmented-sm" role="radiogroup" aria-labelledby="route-label">
-          <button type="button" role="radio" aria-checked="true" data-route="kortast">Kortast</button>
-          <button type="button" role="radio" aria-checked="false" data-route="lugnast">Lugnast</button>
+      <section class="card trip" aria-labelledby="h-trip">
+        <h2 id="h-trip"><span class="num">1</span> Vart ska du?
+          <span class="status" id="status" role="status" hidden>Räknar…</span>
+        </h2>
+
+        <div class="route">
+          <div class="route-box">
+            <div class="route-row">
+              <span class="dot dot-from" aria-hidden="true"></span>
+              <label for="from" class="sr-only">Från</label>
+              <input id="from" type="text" autocomplete="off" placeholder="Startplats" enterkeyhint="next">
+              <button type="button" class="clear" data-clear="from" aria-label="Töm startplats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+              <button type="button" id="locate" class="locate" aria-label="Använd min position">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" class="fill"/><circle cx="12" cy="12" r="7.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>
+                <span>Min plats</span>
+              </button>
+              <ul class="suggest" id="from-suggest" role="listbox" hidden></ul>
+            </div>
+            <div class="route-row">
+              <span class="dot dot-to" aria-hidden="true"></span>
+              <label for="to" class="sr-only">Till</label>
+              <input id="to" type="text" autocomplete="off" placeholder="Vart ska du?" enterkeyhint="go">
+              <button type="button" class="clear" data-clear="to" aria-label="Töm destination"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+              <ul class="suggest" id="to-suggest" role="listbox" hidden></ul>
+            </div>
+          </div>
+          <button type="button" id="swap" class="swap" aria-label="Byt plats på från och till">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>
+          </button>
         </div>
-        <p class="hint" id="route-hint"></p>
-      </div>
+        <p class="error" id="error" role="alert" hidden></p>
 
-      <div class="field">
-        <label for="depart">Avresa</label>
-        <div class="depart-row">
+        <div class="field">
+          <span class="label" id="route-label">Vägval</span>
+          <div class="segmented segmented-sm" role="radiogroup" aria-labelledby="route-label">
+            <button type="button" role="radio" aria-checked="true" data-route="kortast">Kortast</button>
+            <button type="button" role="radio" aria-checked="false" data-route="lugnast">Lugnast</button>
+          </div>
+          <p class="hint" id="route-hint"></p>
+        </div>
+
+        <div class="depart">
+          <label for="depart">Avresa</label>
           <input id="depart" type="time">
           <button type="button" id="now" class="chip">Nu</button>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="card" aria-labelledby="h-car">
-      <h2 id="h-car"><span class="num">2</span> Din EPA</h2>
-
-      <div class="field">
-        <span class="label" id="fuel-label">Bränsle</span>
-        <div class="segmented" role="radiogroup" aria-labelledby="fuel-label">
-          <button type="button" role="radio" aria-checked="true" data-fuel="bensin">Bensin</button>
-          <button type="button" role="radio" aria-checked="false" data-fuel="diesel">Diesel</button>
-        </div>
-      </div>
-
-      <div class="two-col">
-        <div class="field">
-          <label for="consumption">Förbrukning</label>
-          <div class="select-wrap">
-            <select id="consumption"></select>
+      <details class="card epa" id="epa">
+        <summary>
+          <span class="num">2</span>
+          <span class="epa-head">
+            <span class="epa-title">Din EPA</span>
+            <span class="epa-sum" id="epa-summary"></span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <div class="epa-body">
+          <div class="field">
+            <span class="label" id="fuel-label">Bränsle</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="fuel-label">
+              <button type="button" role="radio" aria-checked="true" data-fuel="bensin">Bensin</button>
+              <button type="button" role="radio" aria-checked="false" data-fuel="diesel">Diesel</button>
+            </div>
           </div>
+
+          <div class="two-col">
+            <div class="field">
+              <label for="consumption">Förbrukning</label>
+              <div class="select-wrap">
+                <select id="consumption"></select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="price">Pris kr/l</label>
+              <input id="price" type="number" inputmode="decimal" step="0.01" min="0">
+            </div>
+          </div>
+          <p class="price-note" id="price-note">Hämtar dagens pris…</p>
         </div>
-        <div class="field">
-          <label for="price">Pris kr/l</label>
-          <input id="price" type="number" inputmode="decimal" step="0.01" min="0">
+      </details>
+
+      <section class="results" id="results" hidden aria-live="polite">
+        <div class="big-cost">
+          <span class="label">Kostar dig</span>
+          <strong id="r-cost">–</strong>
+          <span class="sub" id="r-fuel">–</span>
         </div>
-      </div>
-      <p class="price-note" id="price-note">Hämtar dagens pris…</p>
-    </section>
 
-    <div class="side">
-      <div class="map-wrap" id="map-wrap">
-        <div class="map" id="map" role="img" aria-label="Karta över Sverige – din rutt ritas upp här"></div>
-        <p class="map-hint" id="map-hint">Fyll i vart du ska så ritar vi upp resan här</p>
-      </div>
+        <div class="stats">
+          <div class="stat"><span class="label">Sträcka</span><strong id="r-dist">–</strong></div>
+          <div class="stat"><span class="label">Restid</span><strong id="r-time">–</strong><span class="sub" id="r-songs"></span></div>
+          <div class="stat stat-arrive"><span class="label">Framme</span><strong id="r-arrive">–</strong><span class="sub" id="r-day"></span></div>
+        </div>
 
-    <section class="results" id="results" hidden aria-live="polite">
-      <div class="big-cost">
-        <span class="label">Kostar dig</span>
-        <strong id="r-cost">–</strong>
-        <span class="sub" id="r-fuel">–</span>
-      </div>
+        <div class="nav">
+          <a class="nav-btn" id="nav-google" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 21 3l-8 18-2-8Z"/></svg>
+            Starta navigering
+          </a>
+          <a class="nav-alt" id="nav-apple" href="#" hidden>Öppna i Apple Kartor istället</a>
+        </div>
 
-      <div class="stats">
-        <div class="stat"><span class="label">Sträcka</span><strong id="r-dist">–</strong></div>
-        <div class="stat"><span class="label">Restid</span><strong id="r-time">–</strong><span class="sub" id="r-songs"></span></div>
-        <div class="stat stat-wide"><span class="label">Framme</span><strong id="r-arrive">–</strong><span class="sub" id="r-day"></span></div>
-      </div>
-      <div class="nav">
-        <a class="nav-btn" id="nav-google" href="#" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 21 3l-8 18-2-8Z"/></svg>
-          Starta navigering
-        </a>
-        <a class="nav-alt" id="nav-apple" href="#" hidden>Öppna i Apple Kartor istället</a>
-        <p class="nav-note" id="nav-note">Öppnar Google Maps med "undvik motorvägar" och några punkter längs din rutt, så att den följer samma väg. Kartappens restid gäller bil – lita på tiden här.</p>
-      </div>
+        <p class="fine">Räknat på 30 km/h utan pauser. Navigeringen öppnar Google Maps med "undvik motorvägar" och följer samma väg – kartappens restid gäller bil. Kolla alltid skyltarna själv.</p>
+      </section>
 
-      <p class="fine">Räknat på 30 km/h hela vägen, utan pauser. Rutten undviker motorväg och motortrafikled – kolla alltid skyltarna själv.</p>
-    </section>
+      <section class="about" aria-labelledby="about-title">
+        <h2 id="about-title">Ruttplanerare för EPA-traktor och A-traktor</h2>
+        <p>EPAkollen räknar ut vägen för din EPA eller A-traktor utan motorväg och motortrafikled, hur lång tid resan tar i 30 km/h, när du är framme och vad bensinen eller dieseln kostar med dagens rikssnittspris. Välj kortaste vägen eller lugnare småvägar och starta navigeringen direkt i Google Maps. Gratis och funkar som app i mobilen.</p>
+      </section>
+
+      <section class="faq" aria-labelledby="faq-title">
+        <h2 id="faq-title">Vanliga frågor</h2>
+      <details>
+        <summary>Får en EPA-traktor köra på riksvägar?<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <p>Ja. En EPA eller A-traktor får köra på alla vägar utom motorväg och motortrafikled. EPAkollen väljer bara vägar där det är tillåtet enligt kartdatan från OpenStreetMap. Kartdata kan ibland vara fel, så följ alltid skyltarna.</p>
+      </details>
+      <details>
+        <summary>Vad är skillnaden mellan Kortast och Lugnast?<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <p>Kortast tar den kortaste vägen och kan använda större vägar, till exempel riksvägar. Lugnast föredrar mindre vägar med lugnare trafik och blir oftast lite längre.</p>
+      </details>
+      <details>
+        <summary>Hur räknas restid och kostnad?<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <p>Restiden räknas på 30 km/h hela vägen, utan pauser. Kostnaden är sträckan i mil gånger förbrukningen gånger bränslepriset. Priset är rikssnittet för 95 (E10) eller diesel från bensinpriser.nu och uppdateras två gånger per dag. Du kan också skriva in ditt eget pris.</p>
+      </details>
+      <details>
+        <summary>Varför går det inte att räkna längre än ungefär 20 mil?<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <p>Ruttjänsten som EPAkollen använder är gratis och klarar sträckor upp till ungefär 20 mil fågelvägen. Längre resor kan du dela upp i två delar. I 30 km/h tar 20 mil ändå runt sju timmar.</p>
+      </details>
+      <details>
+        <summary>Kan jag installera EPAkollen som app?<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <p>Ja. På iPhone öppnar du sidan i Safari, trycker på Dela och väljer Lägg till på hemskärmen. På Android öppnar du menyn i Chrome och väljer Installera app. På datorn kan du installera den från Chrome eller Edge.</p>
+      </details>
+      <details>
+        <summary>Vad kostar EPAkollen?<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <p>Ingenting. EPAkollen är gratis och du behöver inget konto.</p>
+      </details>
+      </section>
+
+      <footer class="foot">
+        Karta © Esri, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · Rutt: Valhalla · Pris: bensinpriser.nu<br>
+        © <span id="credit-year">2026</span> <a href="https://www.linkedin.com/in/bj%C3%B6rn-norberg-088992345" rel="author me noopener" target="_blank">Björn Norberg</a> · Fler verktyg på <a href="https://junestaden.se">junestaden.se</a>
+      </footer>
+      <script>document.getElementById('credit-year').textContent = new Date().getFullYear();</script>
     </div>
 
-    <section class="about" aria-labelledby="about-title">
-      <h2 id="about-title">Ruttplanerare för EPA-traktor och A-traktor</h2>
-      <p>EPAkollen räknar ut vägen för din EPA eller A-traktor utan motorväg och motortrafikled, hur lång tid resan tar i 30 km/h, när du är framme och vad bensinen eller dieseln kostar med dagens rikssnittspris. Välj kortaste vägen eller lugnare småvägar och starta navigeringen direkt i Google Maps. Gratis och funkar som app i mobilen.</p>
-    </section>
-
-    <footer class="foot">
-      Karta © Esri, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · Rutt: Valhalla · Pris: bensinpriser.nu<br>
-      © <span id="credit-year">2026</span> <a href="https://www.linkedin.com/in/bj%C3%B6rn-norberg-088992345" rel="author me noopener" target="_blank">Björn Norberg</a> · Fler verktyg på <a href="https://junestaden.se">junestaden.se</a>
-    </footer>
-    <script>document.getElementById('credit-year').textContent = new Date().getFullYear();</script>
+    <div class="map-wrap" id="map-wrap">
+      <div class="map" id="map" role="img" aria-label="Karta över Sverige – din rutt ritas upp här"></div>
+      <p class="map-hint" id="map-hint">Fyll i vart du ska så ritar vi upp resan här</p>
+    </div>
   </main>
 
   <!-- Flytande "Installera som app" – mobil och dator (Chrome/Edge), döljs när appen redan är installerad -->
@@ -209,7 +299,7 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="prices.js?v=19"></script>
-  <script src="app.js?v=19"></script>
+  <script src="prices.js?v=20"></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>

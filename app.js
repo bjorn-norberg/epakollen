@@ -57,6 +57,7 @@
   els.consumption.value = Number(state.consumption).toFixed(2);
   els.consumption.addEventListener("change", () => {
     state.consumption = parseFloat(els.consumption.value);
+    updateEpaSummary();
     save();
     renderResult();
   });
@@ -80,7 +81,14 @@
     els.price.value = currentPrice().toFixed(2);
     renderPriceNote();
   }
+  // Sammanfattningen på den hopfällda raden "Din EPA"
+  function updateEpaSummary() {
+    const fuel = state.fuel === "bensin" ? "Bensin" : "Diesel";
+    $("epa-summary").textContent = `${fuel} · ${fmt2.format(state.consumption)} l/mil · ${fmt2.format(currentPrice())} kr/l`;
+  }
+
   function renderPriceNote() {
+    updateEpaSummary();
     const n = els.priceNote;
     n.classList.remove("live");
     if (state.customPrice != null) {
@@ -376,6 +384,7 @@
 
   function markStale() {
     if (state.route) {
+      els.results.dataset.stale = "Välj en plats i listan";
       els.results.classList.add("stale");
       $("map-wrap").classList.add("stale");
     }
@@ -404,10 +413,18 @@
       updateNavLinks();
       if (window.matchMedia("(max-width: 899px)").matches) {
         $("map-wrap").scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        // Dator: se till att resultatet syns i vänsterkolumnen
+        els.results.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     } catch (e) {
       if (seq !== calcSeq) return;
       showError(e instanceof UserError ? e.message : "Något gick fel. Försök igen.");
+      if (state.route) {
+        els.results.dataset.stale = "Ingen ny rutt – se felet ovan";
+        els.results.classList.add("stale");
+        $("map-wrap").classList.add("stale");
+      }
     } finally {
       if (seq !== calcSeq) return;
       els.status.hidden = true;
@@ -424,10 +441,11 @@
 
     els.rCost.textContent = `${fmt0.format(Math.round(cost))} kr`;
     els.rFuel.textContent = `${fmt1.format(liters)} liter ${state.fuel} · ${fmt2.format(currentPrice())} kr/l`;
-    els.rDist.textContent = km < 10 ? `${fmt1.format(km)} km` : `${fmt0.format(km)} km`;
-    els.rTime.textContent = minutes < 60
-      ? `${minutes} min`
-      : `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, "0")} min`;
+    // Enheter i mindre text så att tre nyckeltal ryms bredvid varandra även på mobil
+    els.rDist.innerHTML = `${km < 10 ? fmt1.format(km) : fmt0.format(km)}<small>km</small>`;
+    els.rTime.innerHTML = minutes < 60
+      ? `${minutes}<small>min</small>`
+      : `${Math.floor(minutes / 60)}<small>h</small>&nbsp;${String(minutes % 60).padStart(2, "0")}<small>min</small>`;
     const songs = Math.max(1, Math.round(minutes / 3.5));
     els.rSongs.textContent = `≈ ${songs} ${songs === 1 ? "låt" : "låtar"} i stereon`;
 
