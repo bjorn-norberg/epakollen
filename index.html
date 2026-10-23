@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>EPAkollen – rutt, restid och bränslekostnad för EPA- och A-traktor</title>
   <meta name="description" content="Gratis ruttplanerare för EPA-traktor och A-traktor. Få vägen utan motorväg och motortrafikled, restid i 30 km/h, ankomsttid och vad bensinen eller dieseln kostar – med dagens bränslepris.">
+  <meta name="author" content="Björn Norberg">
   <link rel="canonical" href="https://epa.junestaden.se/">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
@@ -27,7 +28,7 @@
     "inLanguage": "sv",
     "image": "https://epa.junestaden.se/icons/icon-512.png",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "SEK" },
-    "author": {"@type": "Person", "@id": "https://junestaden.se/#person", "name": "Björn Norberg", "url": "https://junestaden.se/", "image": "https://bygg.junestaden.se/img/profil.jpg", "jobTitle": "Student, VVS-ingenjör", "homeLocation": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": "Jönköping", "addressCountry": "SE"}}, "affiliation": {"@type": "CollegeOrUniversity", "name": "TUC Yrkeshögskola"}, "sameAs": ["https://www.linkedin.com/in/bj%C3%B6rn-norberg-088992345/"]}
+    "author": {"@type": "Person", "@id": "https://junestaden.se/#person", "name": "Björn Norberg", "url": "https://junestaden.se/", "image": "https://bygg.junestaden.se/img/profil.jpg", "jobTitle": "Student, VVS-ingenjör", "homeLocation": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": "Jönköping", "addressCountry": "SE"}}, "affiliation": {"@type": "CollegeOrUniversity", "name": "TUC Yrkeshögskola"}, "sameAs": ["https://www.linkedin.com/in/bj%C3%B6rn-norberg-088992345"]}
   }
   </script>
   <meta name="theme-color" content="#0E0B1A">
@@ -171,8 +172,9 @@
 
     <footer class="foot">
       Karta © Esri, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · Rutt: Valhalla · Pris: bensinpriser.nu<br>
-      Fler verktyg på <a href="https://junestaden.se">junestaden.se</a>
+      © <span id="credit-year">2026</span> <a href="https://www.linkedin.com/in/bj%C3%B6rn-norberg-088992345" rel="author me noopener" target="_blank">Björn Norberg</a> · Fler verktyg på <a href="https://junestaden.se">junestaden.se</a>
     </footer>
+    <script>document.getElementById('credit-year').textContent = new Date().getFullYear();</script>
   </main>
 
   <!-- Flytande "Installera som app" – mobil och dator (Chrome/Edge), döljs när appen redan är installerad -->
