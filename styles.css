@@ -386,7 +386,7 @@ select option { background: #241C44; }
     padding: 22px 20px 28px 24px;
     scrollbar-width: thin; scrollbar-color: var(--line) transparent;
   }
-  .map-wrap { margin: 0; padding: 16px 16px 16px 4px; min-height: 0; }
+  .map-wrap { margin: 0; padding: 16px 16px 16px 12px; min-height: 0; }
   .map { height: 100%; }
   .map-hint { font-size: 14px; }
   body.has-install .app { padding-bottom: 0; }
