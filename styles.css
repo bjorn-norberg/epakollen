@@ -269,11 +269,22 @@ select option { background: #241C44; }
   box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
 }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+.map-wrap { position: relative; margin-bottom: 12px; }
 .map {
-  height: 240px; border-radius: var(--radius); overflow: hidden;
-  border: 1px solid var(--line); margin-bottom: 12px;
+  height: 230px; border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--line);
   background: var(--card);
 }
+.map-hint {
+  position: absolute; z-index: 700; left: 14px; top: 14px;
+  margin: 0; padding: 10px 14px; max-width: 220px;
+  border-radius: 999px; background: rgba(14, 11, 26, .82); border: 1px solid var(--line);
+  color: var(--text); font-size: 13px; font-weight: 600; text-align: left; line-height: 1.35; border-radius: 14px;
+  pointer-events: none; backdrop-filter: blur(4px);
+}
+.map-hint[hidden] { display: none; }
+/* Gammal rutt: tona ner linje och nålar tills en ny är framme */
+.map-wrap.stale .leaflet-overlay-pane, .map-wrap.stale .leaflet-marker-pane { opacity: .3; transition: opacity .2s; }
 .leaflet-container { font-family: var(--font); background: #1a1a1a; }
 .leaflet-control-attribution { font-size: 10px; background: rgba(14, 11, 26, .7) !important; color: var(--muted); }
 .leaflet-control-attribution a { color: var(--muted); }
@@ -342,19 +353,25 @@ select option { background: #241C44; }
   .about { grid-row: 5; }
   .foot { grid-row: 6; }
   .card { grid-column: 1; }
-  .results { grid-column: 2; grid-row: 2 / span 3; }
-  .map { height: 380px; }
-  .empty {
-    grid-column: 2; grid-row: 2 / span 3;
-    display: grid; place-items: center; align-content: center; gap: 14px;
-    min-height: 520px; border: 2px dashed var(--line); border-radius: var(--radius);
-    color: #4A3F78; text-align: center;
-  }
-  .empty[hidden] { display: none; }
-  .empty svg { width: 90px; height: 90px; }
-  .empty p { margin: 0; color: var(--muted); font: 600 18px/1.4 var(--font-display); }
+  .side { grid-column: 2; grid-row: 2 / span 3; }
+  .map { height: 460px; }
+  .map-hint { font-size: 14px; }
 }
-@media (max-width: 899px) { .empty { display: none; } }
+
+/* Mobil: ingen karta från start – den visas först när en resa räknats ut, ovanför resultatet */
+@media (max-width: 899px) {
+  .app { display: flex; flex-direction: column; }
+  .side { display: contents; }
+  .top { order: 0; }
+  .card { order: 1; }
+  .map-wrap { order: 2; display: none; margin-bottom: 12px; }
+  .map-wrap.shown { display: block; }
+  .map { height: 240px; }
+  .map-hint { display: none; }
+  .results { order: 3; }
+  .about { order: 4; }
+  .foot { order: 5; }
+}
 
 /* ---------- Installera som app ---------- */
 .install {

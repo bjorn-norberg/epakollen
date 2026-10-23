@@ -372,7 +372,10 @@
   }
 
   function markStale() {
-    if (state.route) els.results.classList.add("stale");
+    if (state.route) {
+      els.results.classList.add("stale");
+      $("map-wrap").classList.add("stale");
+    }
   }
 
   async function calculate() {
@@ -390,14 +393,14 @@
       if (seq !== calcSeq) return;
       state.route = { ...r, a, b };
       els.results.classList.remove("stale");
+      $("map-wrap").classList.remove("stale");
       if (!state.departTouched) setNow();
       els.results.hidden = false;
-      $("empty").hidden = true;
       renderResult();
       drawMap();
       updateNavLinks();
       if (window.matchMedia("(max-width: 899px)").matches) {
-        els.results.scrollIntoView({ behavior: "smooth", block: "start" });
+        $("map-wrap").scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } catch (e) {
       if (seq !== calcSeq) return;
@@ -434,20 +437,33 @@
   }
 
   // ---------- Karta ----------
-  let map, layer;
+  // Kartan visas från start med en utzoomad bild av Sverige och ritar sedan upp rutten.
+  const SWEDEN_BOUNDS = [[55.2, 10.9], [69.1, 24.2]];
+  let map, layer, lastBounds = null;
+
+  function initMap() {
+    if (map || !window.L) return;
+    map = L.map("map", {
+      zoomControl: false, attributionControl: true, scrollWheelZoom: false, zoomSnap: 0.5,
+      // På mobil ska ett svep scrolla sidan, inte flytta kartan (nyp med två fingrar för att zooma)
+      dragging: !L.Browser.mobile,
+    });
+    // Esri Dark Gray kräver ingen nyckel och fungerar även från file:// (OSM:s egna kartservrar blockerar det).
+    const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
+    L.tileLayer(`${esri}World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`, {
+      maxZoom: 16, className: "tiles-base",
+      attribution: '&copy; Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+    L.tileLayer(`${esri}World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 16 }).addTo(map);
+    L.control.zoom({ position: "topright" }).addTo(map);
+    lastBounds = L.latLngBounds(SWEDEN_BOUNDS);
+    map.fitBounds(lastBounds, { padding: [8, 8], animate: false });
+  }
+
   function drawMap() {
-    if (!window.L) return;
-    if (!map) {
-      map = L.map("map", { zoomControl: false, attributionControl: true, scrollWheelZoom: false });
-      // Esri Dark Gray kräver ingen nyckel och fungerar även från file:// (OSM:s egna kartservrar blockerar det).
-      const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
-      L.tileLayer(`${esri}World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`, {
-        maxZoom: 16, className: "tiles-base",
-        attribution: '&copy; Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(map);
-      L.tileLayer(`${esri}World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 16 }).addTo(map);
-      L.control.zoom({ position: "topright" }).addTo(map);
-    }
+    $("map-wrap").classList.add("shown"); // på mobil är kartan dold tills det finns en rutt
+    initMap();
+    if (!map) return;
     if (layer) layer.remove();
     const { coords, a, b } = state.route;
     const bounds = L.latLngBounds(coords);
@@ -462,15 +478,16 @@
       L.marker([b.lat, b.lon], { icon: pin("pin-to") }),
     ]).addTo(map);
     lastBounds = bounds;
+    $("map-hint").hidden = true;
+    $("map-wrap").classList.remove("stale");
   }
 
-  // Passa in rutten igen när kartans storlek ändras (layouten sätter sig, telefonen vrids).
-  let lastBounds = null;
+  // Passa in rutten (eller Sverige) igen när kartans storlek ändras (layouten sätter sig, telefonen vrids).
   if ("ResizeObserver" in window) {
     new ResizeObserver(() => {
       if (!map || !lastBounds) return;
       map.invalidateSize();
-      map.fitBounds(lastBounds, { padding: [28, 28], animate: false });
+      map.fitBounds(lastBounds, { padding: layer ? [28, 28] : [8, 8], animate: false });
     }).observe($("map"));
   }
 
@@ -537,6 +554,11 @@
   function hideError() { els.error.hidden = true; }
 
   // ---------- Start ----------
+  // Datorn: visa kartan (Sverige) från start. Mobilen: först när en rutt finns (se drawMap).
+  const desktopQuery = window.matchMedia("(min-width: 900px)");
+  if (desktopQuery.matches) initMap();
+  desktopQuery.addEventListener?.("change", (e) => { if (e.matches) initMap(); });
+
   // ---------- Vägval ----------
   const ROUTE_HINTS = {
     kortast: "Snabbast – kan gå på större vägar där EPA är tillåten.",

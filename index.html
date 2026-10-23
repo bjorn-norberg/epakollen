@@ -44,7 +44,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
   <main class="app">
@@ -134,14 +134,13 @@
       <p class="price-note" id="price-note">Hämtar dagens pris…</p>
     </section>
 
-    <div class="empty" id="empty" aria-hidden="true">
-      <svg viewBox="0 0 64 64"><path d="M32 6 60 56H4Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-dasharray="6 6"/></svg>
-      <p>Fyll i vart du ska<br>så ritar vi upp resan här.</p>
-    </div>
+    <div class="side">
+      <div class="map-wrap" id="map-wrap">
+        <div class="map" id="map" role="img" aria-label="Karta över Sverige – din rutt ritas upp här"></div>
+        <p class="map-hint" id="map-hint">Fyll i vart du ska så ritar vi upp resan här</p>
+      </div>
 
     <section class="results" id="results" hidden aria-live="polite">
-      <div class="map" id="map"></div>
-
       <div class="big-cost">
         <span class="label">Kostar dig</span>
         <strong id="r-cost">–</strong>
@@ -164,6 +163,7 @@
 
       <p class="fine">Räknat på 30 km/h hela vägen, utan pauser. Rutten undviker motorväg och motortrafikled – kolla alltid skyltarna själv.</p>
     </section>
+    </div>
 
     <section class="about" aria-labelledby="about-title">
       <h2 id="about-title">Ruttplanerare för EPA-traktor och A-traktor</h2>
@@ -209,7 +209,7 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="prices.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="prices.js?v=18"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>
