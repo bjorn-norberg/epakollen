@@ -346,7 +346,8 @@ select option { background: #241C44; }
 
 @media (min-width: 900px) {
   .app {
-    max-width: 980px; display: grid; grid-template-columns: 420px 1fr; column-gap: 24px; align-items: start;
+    /* Bredare på datorn så att kartan får ta plats; formuläret behåller sin bredd till vänster */
+    max-width: 1400px; display: grid; grid-template-columns: 420px 1fr; column-gap: 28px; align-items: start;
     grid-template-rows: auto auto auto 1fr auto auto;
   }
   .top, .foot, .about { grid-column: 1 / -1; }
@@ -354,8 +355,12 @@ select option { background: #241C44; }
   .foot { grid-row: 6; }
   .card { grid-column: 1; }
   .side { grid-column: 2; grid-row: 2 / span 3; }
-  .map { height: 460px; }
+  /* Kartans höjd följer fönstret: ca 70 % av höjden, mellan 460 och 800 px */
+  .map { height: clamp(460px, 70vh, 800px); }
   .map-hint { font-size: 14px; }
+}
+@media (min-width: 1280px) {
+  .app { grid-template-columns: 460px 1fr; column-gap: 32px; }
 }
 
 /* Mobil: ingen karta från start – den visas först när en resa räknats ut, ovanför resultatet */
