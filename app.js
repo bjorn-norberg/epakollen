@@ -323,11 +323,13 @@
     const body = {
       locations: [{ lat: a.lat, lon: a.lon }, { lat: b.lat, lon: b.lon }],
       costing: "motor_scooter",
-      // Kortast: kortaste väg = snabbaste för en EPA som alltid kör 30 km/h.
-      // Lugnast: föredrar mindre vägar framför stora huvudvägar. Mopedreglerna gäller i båda.
+      // Kortast: hög topphastighet i ruttberäkningen gör att riksvägar föredras, vilket ger nästan kortaste väg.
+      //   (Ruttjänstens egen "shortest"-inställning ger ibland rutter via andra länder på långa sträckor.)
+      // Lugnast: föredrar mindre vägar framför stora huvudvägar.
+      // Mopedreglerna gäller i båda – aldrig motorväg eller motortrafikled. Restiden räknas i appen på 30 km/h.
       costing_options: {
         motor_scooter: state.routeMode === "kortast"
-          ? { top_speed: SPEED_KMH, shortest: true }
+          ? { top_speed: 90, use_primary: 1.0 }
           : { top_speed: SPEED_KMH, use_primary: 0.1, use_hills: 0.5 },
       },
       directions_type: "none",
@@ -344,6 +346,7 @@
       throw new UserError("Får ingen kontakt med ruttjänsten. Kolla din uppkoppling och försök igen.");
     }
     const data = await res.json().catch(() => ({}));
+    if (data.error_code === 154) throw new UserError("Sträckan är för lång för ruttjänsten (max ungefär 20 mil fågelvägen). Dela upp resan i två delar.");
     if (res.status === 429) throw new UserError("Ruttjänsten är överbelastad just nu. Vänta en stund och försök igen.");
     if (!res.ok || !data.trip) throw new UserError("Hittade ingen väg utan motorväg dit. Prova en annan eller närmare plats.");
     const leg = data.trip.legs[0];
