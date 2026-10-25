@@ -49,7 +49,7 @@
   }
 
   // ---------- Förbrukning ----------
-  for (let i = 10; i <= 100; i += 5) {
+  for (let i = 10; i <= 200; i += 5) {
     const v = i / 100;
     const opt = new Option(`${fmt2.format(v)} l/mil`, v.toFixed(2));
     els.consumption.add(opt);
