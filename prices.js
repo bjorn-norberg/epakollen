@@ -1,6 +1,6 @@
 window.EPA_PRICES = {
-  "bensin": 16.81,
-  "diesel": 22.48,
-  "updated": "2026-11-01T11:48:26+00:00",
+  "bensin": 16.79,
+  "diesel": 22.44,
+  "updated": "2026-11-01T18:24:16+00:00",
   "source": "bensinpriser.nu (rikssnitt)"
 };
