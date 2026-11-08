@@ -515,6 +515,8 @@
   // ---------- Navigering i kartappen ----------
   const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent)
     || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const IS_ANDROID = /Android/i.test(navigator.userAgent);
+  const installed = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 
   function distKm([lat1, lon1], [lat2, lon2]) {
     const r = Math.PI / 180;
@@ -554,14 +556,41 @@
     // Utan origin startar Google Maps från telefonens position.
     if (a !== state.myPos) params.set("origin", ll([a.lat, a.lon]));
     if (state.route.km > 3) params.set("waypoints", pointsAlong(coords, 3).map(ll).join("|"));
-    els.navGoogle.href = `https://www.google.com/maps/dir/?${params}`;
+    const web = `https://www.google.com/maps/dir/?${params}`;
+    // Från en installerad app öppnas google.com-länkar i en inbyggd webbvy i stället för i Google Maps-appen.
+    // Därför lämnas samma adress över direkt till appen, så att "undvik motorvägar" och punkterna följer med:
+    // Android: en intent (Chrome öppnar webbversionen om appen saknas).
+    // iPhone i installerad app: comgooglemapsurl:// (webbversionen öppnas om appen saknas, se klicklyssnaren nedan).
+    // Dator och Safari: vanlig länk i ny flik.
+    let href = web;
+    if (IS_ANDROID) {
+      href = `intent://www.google.com/maps/dir/?${params}#Intent;scheme=https;`
+        + `package=com.google.android.apps.maps;S.browser_fallback_url=${encodeURIComponent(web)};end`;
+    } else if (IS_IOS && installed()) {
+      href = web.replace("https://", "comgooglemapsurl://");
+    }
+    els.navGoogle.href = href;
+    els.navGoogle.dataset.web = web;
+    if (href === web) els.navGoogle.target = "_blank"; else els.navGoogle.removeAttribute("target");
 
     // Apple Kartor kan inte ta emot "undvik motorvägar" via länk – visas bara på iPhone/iPad.
+    // maps:// öppnar appen direkt, även från en installerad app.
     els.navApple.hidden = !IS_IOS;
     if (IS_IOS) {
-      els.navApple.href = `https://maps.apple.com/?saddr=${ll([a.lat, a.lon])}&daddr=${ll([b.lat, b.lon])}&dirflg=d`;
+      els.navApple.href = `maps://?saddr=${ll([a.lat, a.lon])}&daddr=${ll([b.lat, b.lon])}&dirflg=d`;
     }
   }
+
+  // iPhone: saknas Google Maps-appen händer inget när comgooglemapsurl:// öppnas.
+  // Ligger sidan fortfarande framme efter en stund öppnas webbversionen i stället.
+  els.navGoogle.addEventListener("click", () => {
+    if (!els.navGoogle.href.startsWith("comgooglemapsurl:")) return;
+    const web = els.navGoogle.dataset.web;
+    const t = setTimeout(() => { if (document.visibilityState === "visible") location.href = web; }, 1500);
+    const cancel = () => clearTimeout(t);
+    document.addEventListener("visibilitychange", cancel, { once: true });
+    window.addEventListener("pagehide", cancel, { once: true });
+  });
 
   els.navApple.addEventListener("click", (e) => {
     if (!confirm("Apple Kartor kan välja motorväg. Slå på \"Undvik motorvägar\" under Vägbeskrivning i Apple Kartor innan du kör. Fortsätta?")) {
