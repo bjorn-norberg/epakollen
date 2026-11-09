@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>EPAkollen – rutt, restid och bränslekostnad för EPA- och A-traktor</title>
-  <meta name="description" content="Gratis ruttplanerare för EPA-traktor och A-traktor. Få vägen utan motorväg och motortrafikled, restid i 30 km/h, ankomsttid och vad bensinen eller dieseln kostar – med dagens bränslepris.">
+  <title>EPA-karta och ruttplanerare för EPA- och A-traktor | EPAkollen</title>
+  <meta name="description" content="Gratis EPA-karta och ruttplanerare för EPA-traktor och A-traktor. Se rutten på karta utan motorväg och motortrafikled, restid i 30 km/h, ankomsttid och bränslekostnad med dagens bensin- och dieselpris.">
   <meta name="author" content="Björn Norberg">
   <link rel="canonical" href="https://epa.junestaden.se/">
   <meta name="robots" content="index, follow">
@@ -12,7 +12,7 @@
   <meta property="og:locale" content="sv_SE">
   <meta property="og:site_name" content="EPAkollen">
   <meta property="og:url" content="https://epa.junestaden.se/">
-  <meta property="og:title" content="EPAkollen – rutt och kostnad för din EPA">
+  <meta property="og:title" content="EPA-karta med rutt och kostnad – EPAkollen">
   <meta property="og:description" content="Vägen utan motorväg, restid i 30 km/h och bränslekostnad med dagens pris. Gratis, funkar som app i mobilen.">
   <meta property="og:image" content="https://epa.junestaden.se/icons/icon-512.png">
   <meta name="twitter:card" content="summary">
@@ -22,7 +22,7 @@
     "@type": "WebApplication",
     "name": "EPAkollen",
     "url": "https://epa.junestaden.se/",
-    "description": "Ruttplanerare för EPA-traktor och A-traktor: väg utan motorväg och motortrafikled, restid i 30 km/h och bränslekostnad med dagens bränslepris.",
+    "description": "EPA-karta och ruttplanerare för EPA-traktor och A-traktor: rutt på karta utan motorväg och motortrafikled, restid i 30 km/h och bränslekostnad med dagens bränslepris.",
     "applicationCategory": "TravelApplication",
     "operatingSystem": "Alla – webbläsare, iPhone och Android",
     "inLanguage": "sv",
@@ -36,6 +36,14 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Finns det en EPA-karta som visar vilka vägar jag får köra på?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "EPAkollen ritar din rutt på en karta och väljer bara vägar där en EPA eller A-traktor får köra, alltså inte motorväg och motortrafikled. Du skriver in start och mål och ser vägen på kartan tillsammans med restid och bränslekostnad. Underlaget är OpenStreetMap, så kontrollera alltid skyltarna längs vägen."
+      }
+    },
     {
       "@type": "Question",
       "name": "Får en EPA-traktor köra på riksvägar?",
@@ -100,7 +108,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="stylesheet" href="styles.css?v=26">
 </head>
 <body>
   <main class="app">
@@ -222,12 +230,16 @@
       </section>
 
       <section class="about" aria-labelledby="about-title">
-        <h2 id="about-title">Ruttplanerare för EPA-traktor och A-traktor</h2>
-        <p>EPAkollen räknar ut vägen för din EPA eller A-traktor utan motorväg och motortrafikled, hur lång tid resan tar i 30 km/h, när du är framme och vad bensinen eller dieseln kostar med dagens rikssnittspris. Välj kortaste vägen eller lugnare småvägar och starta navigeringen direkt i Google Maps. Gratis och funkar som app i mobilen.</p>
+        <h2 id="about-title">EPA-karta och ruttplanerare för EPA-traktor och A-traktor</h2>
+        <p>EPAkollen är en EPA-karta där du ser din rutt direkt på kartan. Den räknar ut vägen för din EPA eller A-traktor utan motorväg och motortrafikled, hur lång tid resan tar i 30 km/h, när du är framme och vad bensinen eller dieseln kostar med dagens rikssnittspris. Välj kortaste vägen eller lugnare småvägar och starta navigeringen direkt i Google Maps. Gratis och funkar som app i mobilen.</p>
       </section>
 
       <section class="faq" aria-labelledby="faq-title">
         <h2 id="faq-title">Vanliga frågor</h2>
+        <details>
+          <summary>Finns det en EPA-karta som visar vilka vägar jag får köra på?<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <p>EPAkollen ritar din rutt på en karta och väljer bara vägar där en EPA eller A-traktor får köra, alltså inte motorväg och motortrafikled. Du skriver in start och mål och ser vägen på kartan tillsammans med restid och bränslekostnad. Underlaget är OpenStreetMap, så kontrollera alltid skyltarna längs vägen.</p>
+        </details>
       <details>
         <summary>Får en EPA-traktor köra på riksvägar?<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
         <p>Ja. En EPA eller A-traktor får köra på alla vägar utom motorväg och motortrafikled. EPAkollen väljer bara vägar där det är tillåtet enligt kartdatan från OpenStreetMap. Kartdata kan ibland vara fel, så följ alltid skyltarna.</p>
@@ -262,7 +274,7 @@
     </div>
 
     <div class="map-wrap" id="map-wrap">
-      <div class="map" id="map" role="img" aria-label="Karta över Sverige – din rutt ritas upp här"></div>
+      <div class="map" id="map" role="img" aria-label="EPA-karta över Sverige – din rutt ritas upp här"></div>
       <p class="map-hint" id="map-hint">Fyll i vart du ska så ritar vi upp resan här</p>
     </div>
   </main>
@@ -299,7 +311,7 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="prices.js?v=25"></script>
-  <script src="app.js?v=25"></script>
+  <script src="prices.js?v=26"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>
