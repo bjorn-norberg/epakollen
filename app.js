@@ -190,7 +190,8 @@
     const close = () => { list.hidden = true; active = -1; input.setAttribute("aria-expanded", "false"); };
     const pick = (p) => {
       state.places[key] = p;
-      input.value = p.label;
+      input.value = p.main;   // bara ortsnamnet får plats i fältet; län och ort syns i förslagslistan
+      input.title = p.label;
       close();
       if (key === "from" && !els.to.value) els.to.focus();
       else autoCalculate();
@@ -294,7 +295,8 @@
         if (data.features?.length) {
           const named = toPlace(data.features[0]);
           p.label = `Min position · ${named.label}`;
-          els.from.value = p.label;
+          els.from.value = `Min position · ${named.main}`;
+          els.from.title = p.label;
         }
       } catch { /* behåll "Min position" */ }
       els.locate.classList.remove("busy");
@@ -370,7 +372,8 @@
     catch { throw new UserError("Får ingen kontakt med platssöket. Kolla din uppkoppling och försök igen."); }
     if (!r.length) throw new UserError(`Hittade inte "${q}". Prova att skriva ort också.`);
     state.places[key] = r[0];
-    input.value = r[0].label;
+    input.value = r[0].main;
+    input.title = r[0].label;
     return r[0];
   }
 
