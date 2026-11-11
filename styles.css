@@ -403,7 +403,12 @@ select option { background: #241C44; }
   .top { order: 0; }
   .trip { order: 1; }
   .epa { order: 2; }
-  .map-wrap { order: 3; display: none; margin-bottom: 12px; }
+  .map-wrap {
+    order: 3; display: none; margin-bottom: 12px;
+    /* När sidan hoppar till kartan: stanna en bit nedanför iPhonens statusfält/Dynamic Island,
+       som annars täcker (och suddar) kartans överkant */
+    scroll-margin-top: calc(max(env(safe-area-inset-top), 56px) + 12px);
+  }
   .map-wrap.shown { display: block; }
   .map { height: 240px; }
   .map-hint { display: none; }
