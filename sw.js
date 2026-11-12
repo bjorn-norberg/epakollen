@@ -1,4 +1,4 @@
-const CACHE = "epakollen-v31";
+const CACHE = "epakollen-v32";
 const SHELL = ["./", "index.html", "styles.css", "app.js", "prices.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
 
 self.addEventListener("install", (e) => {
