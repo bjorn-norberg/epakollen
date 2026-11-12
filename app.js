@@ -393,6 +393,38 @@
     }
   }
 
+  // Egen mjuk scroll: webbläsarens inbyggda "smooth" går inte att sakta ner och är ryckig/snabb på iPhone.
+  // Lugn start och mjuk inbromsning (easeInOutCubic); avbryts om användaren själv rör sidan.
+  let scrollFrame = 0;
+  function softScrollTo(el, duration = 1100) {
+    cancelAnimationFrame(scrollFrame);
+    const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    const target = Math.max(0, Math.round(el.getBoundingClientRect().top + window.scrollY - margin));
+    const start = window.scrollY;
+    const dist = target - start;
+    if (Math.abs(dist) < 4 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      window.scrollTo(0, target);
+      return;
+    }
+    // Längre avstånd får lite längre tid, men aldrig mer än ca 1,6 s
+    const time = Math.min(1600, duration + Math.abs(dist) * 0.25);
+    const t0 = performance.now();
+    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const stop = () => { cancelAnimationFrame(scrollFrame); clearTimeout(fallback); cleanup(); };
+    const cleanup = () => ["wheel", "touchstart", "keydown"].forEach((ev) => window.removeEventListener(ev, stop));
+    ["wheel", "touchstart", "keydown"].forEach((ev) => window.addEventListener(ev, stop, { passive: true }));
+    let done = false;
+    const finish = () => { done = true; clearTimeout(fallback); cleanup(); };
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / time);
+      window.scrollTo(0, start + dist * ease(p));
+      if (p < 1) scrollFrame = requestAnimationFrame(step); else finish();
+    };
+    // Reserv: om webbläsaren pausar animationer (t.ex. bakgrundsflik) hamnar sidan ändå rätt
+    const fallback = setTimeout(() => { if (!done) { window.scrollTo(0, target); finish(); } }, time + 250);
+    scrollFrame = requestAnimationFrame(step);
+  }
+
   async function calculate() {
     const seq = ++calcSeq;
     hideError();
@@ -415,7 +447,7 @@
       drawMap();
       updateNavLinks();
       if (window.matchMedia("(max-width: 899px)").matches) {
-        $("map-wrap").scrollIntoView({ behavior: "smooth", block: "start" });
+        softScrollTo($("map-wrap"));
       } else {
         // Dator: se till att resultatet syns i vänsterkolumnen
         els.results.scrollIntoView({ behavior: "smooth", block: "nearest" });
