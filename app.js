@@ -200,7 +200,11 @@
       input.title = p.label;
       close();
       if (key === "from" && !els.to.value) els.to.focus();
-      else autoCalculate();
+      else {
+        // Klart val: släpp fokus så att tangentbordet försvinner (annars ligger det kvar över kartan på mobilen)
+        input.blur();
+        autoCalculate();
+      }
     };
     const render = () => {
       list.innerHTML = "";
