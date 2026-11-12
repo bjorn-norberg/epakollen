@@ -87,10 +87,13 @@
   }
   function speed() { return VEHICLES[state.vehicle].speed; }
 
+  // Diskret avdelare mellan uppgifter: ett tunt, dämpat streck (ritas i CSS, inte som tecken)
+  const SEP = '<i class="sep" aria-hidden="true"></i>';
+
   // Sammanfattningen på den hopfällda raden under "Ditt fordon"
   function updateEpaSummary() {
     const fuel = state.fuel === "bensin" ? "Bensin" : "Diesel";
-    $("epa-summary").textContent = `${fuel} | ${fmt2.format(state.consumption)} l/mil | ${fmt2.format(currentPrice())} kr/l`;
+    $("epa-summary").innerHTML = `${fuel}${SEP}${fmt2.format(state.consumption)} l/mil${SEP}${fmt2.format(currentPrice())} kr/l`;
   }
 
   function renderPriceNote() {
@@ -113,7 +116,7 @@
       const when = d ? d.toLocaleDateString("sv-SE", { day: "numeric", month: "short" }).replace(/\.$/, "") : "";
       const fresh = d && Date.now() - d.getTime() < 3 * 864e5;
       n.classList.toggle("live", state.priceSource === "live" && fresh);
-      n.innerHTML = `Rikssnitt för ${name} · <b>${when}</b>. Tanka billigare? Ändra priset.`;
+      n.innerHTML = `Rikssnitt för ${name}${SEP}<b>${when}</b>. Tanka billigare? Ändra priset.`;
     } else {
       n.textContent = `Kunde inte hämta dagens pris – ungefärligt pris för ${name}. Skriv in ditt eget.`;
     }
@@ -485,7 +488,7 @@
     const minutes = Math.round((km / speed()) * 60);
 
     els.rCost.textContent = `${fmt0.format(Math.round(cost))} kr`;
-    els.rFuel.textContent = `${fmt1.format(liters)} liter ${state.fuel} | ${fmt2.format(currentPrice())} kr/l`;
+    els.rFuel.innerHTML = `${fmt1.format(liters)} liter ${state.fuel}${SEP}${fmt2.format(currentPrice())} kr/l`;
     // Enheter i mindre text så att tre nyckeltal ryms bredvid varandra även på mobil
     els.rDist.innerHTML = `${km < 10 ? fmt1.format(km) : fmt0.format(km)}<small>km</small>`;
     els.rTime.innerHTML = minutes < 60

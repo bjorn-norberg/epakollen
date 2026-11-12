@@ -209,6 +209,11 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 .fuelbox summary::-webkit-details-marker { display: none; }
 .fuelbox summary:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 .epa-sum { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Diskret avdelare: tunt streck i dämpad färg med luft på sidorna */
+.sep {
+  display: inline-block; width: 1px; height: .95em; margin: 0 .65em;
+  background: currentColor; opacity: .3; vertical-align: -.12em;
+}
 .chev { flex: none; width: 22px; height: 22px; fill: none; stroke: var(--muted); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s; }
 details[open] > summary .chev { transform: rotate(180deg); }
 .epa-body { padding: 4px 14px 16px; }
