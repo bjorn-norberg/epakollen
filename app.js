@@ -485,7 +485,7 @@
     const minutes = Math.round((km / speed()) * 60);
 
     els.rCost.textContent = `${fmt0.format(Math.round(cost))} kr`;
-    els.rFuel.textContent = `ca ${fmt1.format(liters)} liter ${state.fuel} | ${fmt2.format(state.consumption)} l/mil | ${fmt2.format(currentPrice())} kr/l`;
+    els.rFuel.textContent = `${fmt1.format(liters)} liter ${state.fuel} | ${fmt2.format(currentPrice())} kr/l`;
     // Enheter i mindre text så att tre nyckeltal ryms bredvid varandra även på mobil
     els.rDist.innerHTML = `${km < 10 ? fmt1.format(km) : fmt0.format(km)}<small>km</small>`;
     els.rTime.innerHTML = minutes < 60
