@@ -1,7 +1,7 @@
 {
   "name": "EPAkollen – restid & kostnad",
   "short_name": "EPAkollen",
-  "description": "Rutt, restid och bränslekostnad för EPA- och A-traktor. 30 km/h, inga motorvägar.",
+  "description": "Rutt, restid och bränslekostnad för EPA, A-traktor och mopedbil. Inga motorvägar.",
   "lang": "sv",
   "start_url": "./",
   "scope": "./",

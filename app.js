@@ -1,7 +1,10 @@
 (() => {
   "use strict";
 
-  const SPEED_KMH = 30;
+  // Fordon: EPA/A-traktor 30 km/h, mopedbil 45 km/h. Vägarna är desamma (inte motorväg/motortrafikled),
+  // så rutten beräknas alltid med samma inställningar – bara restiden skiljer.
+  const ROUTE_SPEED = 30;
+  const VEHICLES = { epa: { speed: 30 }, mopedbil: { speed: 45 } };
   const SWEDEN_BBOX = "10.5,55.0,24.5,69.2";
   const FALLBACK_PRICES = { bensin: 19.3, diesel: 22.5 };
   const STORE = "epakollen:v1";
@@ -29,6 +32,7 @@
   const state = {
     fuel: saved.fuel || "bensin",
     routeMode: saved.routeMode === "lugnast" ? "lugnast" : "kortast",
+    vehicle: saved.vehicle in VEHICLES ? saved.vehicle : "epa",
     consumption: saved.consumption || 0.6,
     prices: { ...FALLBACK_PRICES },
     priceSource: "fallback",
@@ -44,7 +48,7 @@
   function save(extra) {
     try {
       const cur = load();
-      localStorage.setItem(STORE, JSON.stringify({ ...cur, fuel: state.fuel, consumption: state.consumption, routeMode: state.routeMode, ...extra }));
+      localStorage.setItem(STORE, JSON.stringify({ ...cur, fuel: state.fuel, consumption: state.consumption, routeMode: state.routeMode, vehicle: state.vehicle, ...extra }));
     } catch { /* privat läge e.d. */ }
   }
 
@@ -81,7 +85,9 @@
     els.price.value = currentPrice().toFixed(2);
     renderPriceNote();
   }
-  // Sammanfattningen på den hopfällda raden "Din EPA"
+  function speed() { return VEHICLES[state.vehicle].speed; }
+
+  // Sammanfattningen på den hopfällda raden under "Ditt fordon"
   function updateEpaSummary() {
     const fuel = state.fuel === "bensin" ? "Bensin" : "Diesel";
     $("epa-summary").textContent = `${fuel} · ${fmt2.format(state.consumption)} l/mil · ${fmt2.format(currentPrice())} kr/l`;
@@ -336,11 +342,11 @@
       // Kortast: hög topphastighet i ruttberäkningen gör att riksvägar föredras, vilket ger nästan kortaste väg.
       //   (Ruttjänstens egen "shortest"-inställning ger ibland rutter via andra länder på långa sträckor.)
       // Lugnast: föredrar mindre vägar framför stora huvudvägar.
-      // Mopedreglerna gäller i båda – aldrig motorväg eller motortrafikled. Restiden räknas i appen på 30 km/h.
+      // Mopedreglerna gäller i båda – aldrig motorväg eller motortrafikled. Restiden räknas i appen på fordonets hastighet.
       costing_options: {
         motor_scooter: state.routeMode === "kortast"
           ? { top_speed: 90, use_primary: 1.0 }
-          : { top_speed: SPEED_KMH, use_primary: 0.1, use_hills: 0.5 },
+          : { top_speed: ROUTE_SPEED, use_primary: 0.1, use_hills: 0.5 },
       },
       directions_type: "none",
       units: "kilometers",
@@ -472,7 +478,7 @@
     const km = state.route.km;
     const liters = (km / 10) * state.consumption;
     const cost = liters * currentPrice();
-    const minutes = Math.round((km / SPEED_KMH) * 60);
+    const minutes = Math.round((km / speed()) * 60);
 
     els.rCost.textContent = `${fmt0.format(Math.round(cost))} kr`;
     els.rFuel.textContent = `${fmt1.format(liters)} liter ${state.fuel} · ${fmt2.format(currentPrice())} kr/l`;
@@ -646,7 +652,7 @@
 
   // ---------- Vägval ----------
   const ROUTE_HINTS = {
-    kortast: "Snabbast – kan gå på större vägar där EPA är tillåten.",
+    kortast: "Snabbast – kan gå på större vägar där du får köra.",
     lugnast: "Mindre vägar med lugnare trafik – oftast lite längre.",
   };
   function setRouteMode(mode, recalc) {
@@ -660,6 +666,20 @@
     if (b.dataset.route !== state.routeMode) setRouteMode(b.dataset.route, true);
   }));
 
+  // ---------- Fordon ----------
+  const vehicleButtons = [...document.querySelectorAll("[data-vehicle]")];
+  function setVehicle(v) {
+    state.vehicle = v;
+    vehicleButtons.forEach((b) => b.setAttribute("aria-checked", String(b.dataset.vehicle === v)));
+    $("fine-speed").textContent = speed();
+    save();
+    renderResult(); // bara restid och ankomst ändras – rutten är densamma
+  }
+  vehicleButtons.forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.vehicle !== state.vehicle) setVehicle(b.dataset.vehicle);
+  }));
+
+  setVehicle(state.vehicle);
   setRouteMode(state.routeMode, false);
   setFuel(state.fuel);
   loadPrices();
