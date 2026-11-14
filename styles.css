@@ -308,7 +308,9 @@ select option { background: #241C44; }
 .map-hint[hidden] { display: none; }
 /* Gammal rutt: tona ner linje och nålar tills en ny är framme */
 .map-wrap.stale .leaflet-overlay-pane, .map-wrap.stale .leaflet-marker-pane { opacity: .3; transition: opacity .2s; }
-.leaflet-container { font-family: var(--font); background: #1a1a1a; }
+.leaflet-container { font-family: var(--font); background: #15102A; }
+/* Kartan i appens lila ton: grå kartbilder färgas om (vägar och ortnamn behålls) */
+.leaflet-tile-pane { filter: sepia(.75) hue-rotate(200deg) saturate(1.5) brightness(.5) contrast(1.2); }
 .leaflet-control-attribution { font-size: 10px; background: rgba(14, 11, 26, .7) !important; color: var(--muted); }
 .leaflet-control-attribution a { color: var(--muted); }
 /* Esri Dark Gray är väldigt mörk – lyft vägarna lite */
@@ -341,6 +343,61 @@ select option { background: #241C44; }
 .stat-arrive strong { color: var(--pink); }
 
 .nav { margin-top: 10px; }
+.nav-row { display: flex; gap: 8px; }
+.nav-row .nav-btn { flex: 1; min-width: 0; }
+.share-btn {
+  flex: none; display: flex; align-items: center; justify-content: center; gap: 7px;
+  height: 58px; padding: 0 16px; border-radius: 18px;
+  border: 2px solid var(--line); background: transparent;
+  font: 700 16px/1 var(--font-display);
+}
+.share-btn svg { width: 20px; height: 20px; fill: none; stroke: var(--lime); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.share-btn:active { background: var(--card-2); }
+
+/* Vägval under kartan: båda alternativen med sträcka och tid */
+.route-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.route-choice button {
+  min-width: 0; padding: 10px 12px; text-align: left;
+  border: 1px solid var(--line); border-radius: 16px; background: var(--card);
+  transition: background .18s, color .18s, border-color .18s;
+}
+.route-choice b { display: block; font: 700 16px/1.2 var(--font-display); }
+.route-choice span { display: block; margin-top: 3px; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route-choice button[aria-checked="true"] { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+.route-choice button[aria-checked="true"] span { color: rgba(26, 34, 0, .75); }
+.route-choice button:disabled { opacity: .5; cursor: default; }
+.route-choice button:not(:disabled):active { transform: scale(.98); }
+.results.stale .route-choice { pointer-events: none; }
+
+/* Sparade och senaste platser */
+.places { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 4px; }
+.places:empty { display: none; }
+.pchip {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  height: 34px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card-2);
+  font-size: 13.5px; font-weight: 600;
+}
+.pchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+.pchip svg { flex: none; width: 15px; height: 15px; fill: none; stroke: var(--lime); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pchip.recent svg { stroke: var(--muted); }
+.pchip.empty { background: transparent; border-style: dashed; color: var(--muted); }
+.pchip.empty svg, .pchip.tool svg { stroke: var(--muted); }
+.pchip.tool { padding: 0 10px; background: transparent; }
+.pchip:active { background: #2A2150; }
+
+.slot { padding: 12px 0; border-top: 1px solid var(--line); }
+.slot:first-child { border-top: 0; padding-top: 0; }
+.slot b { font: 700 16px/1.2 var(--font-display); }
+.slot p { margin: 2px 0 8px; color: var(--muted); font-size: 13.5px; }
+.slot-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.slot-btns button {
+  height: 36px; padding: 0 12px; border-radius: 10px; max-width: 100%;
+  border: 1px solid var(--line); background: var(--card-2);
+  font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.slot-btns button.danger { background: transparent; color: #FFB3B8; }
+.sheet-info { margin: 12px 0 14px; color: var(--muted); font-size: 12.5px; }
 .nav-btn {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   height: 58px; border-radius: 18px;
@@ -519,3 +576,6 @@ body.has-install .app { padding-bottom: calc(env(safe-area-inset-bottom) + 100px
 }
 .pin-from { background: var(--lime); color: var(--lime); }
 .pin-to { background: var(--pink); color: var(--pink); border-radius: 6px; }
+/* Målnålen poppar fram när rutten ritats klart */
+.pin.pop { animation: pin-pop .4s cubic-bezier(.2, 1.7, .4, 1) both; animation-delay: var(--d, 0ms); }
+@keyframes pin-pop { from { transform: scale(0); opacity: 0; } }

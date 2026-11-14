@@ -17,7 +17,7 @@
     depart: $("depart"), now: $("now"),
     consumption: $("consumption"), price: $("price"), priceNote: $("price-note"),
     status: $("status"), error: $("error"), results: $("results"),
-    rCost: $("r-cost"), rFuel: $("r-fuel"), rDist: $("r-dist"),
+    rCost: $("r-cost"), rFuel: $("r-fuel"), rDist: $("r-dist"), rMil: $("r-mil"),
     rTime: $("r-time"), rSongs: $("r-songs"), rArrive: $("r-arrive"), rDay: $("r-day"),
     navGoogle: $("nav-google"), navApple: $("nav-apple"),
   };
@@ -310,6 +310,7 @@
           p.label = `Min position · ${named.label}`;
           els.from.value = `Min position · ${named.main}`;
           els.from.title = p.label;
+          p.shareName = named.main; // ortsnamnet används när resan delas eller sparas
         }
       } catch { /* behåll "Min position" */ }
       els.locate.classList.remove("busy");
@@ -342,7 +343,7 @@
 
   // motor_scooter följer mopedregler: aldrig motorväg eller motortrafikled.
   // Ingen reserv med bilprofil – hellre inget svar än en rutt på motorväg.
-  async function getRoute(a, b) {
+  async function getRoute(a, b, mode) {
     const body = {
       locations: [{ lat: a.lat, lon: a.lon }, { lat: b.lat, lon: b.lon }],
       costing: "motor_scooter",
@@ -351,7 +352,7 @@
       // Lugnast: föredrar mindre vägar framför stora huvudvägar.
       // Mopedreglerna gäller i båda – aldrig motorväg eller motortrafikled. Restiden räknas i appen på fordonets hastighet.
       costing_options: {
-        motor_scooter: state.routeMode === "kortast"
+        motor_scooter: mode === "kortast"
           ? { top_speed: 90, use_primary: 1.0 }
           : { top_speed: ROUTE_SPEED, use_primary: 0.1, use_hills: 0.5 },
       },
@@ -392,6 +393,13 @@
 
   // ---------- Beräkning ----------
   let calcSeq = 0;
+  let countSeq = 0;
+  const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const isMobileLayout = () => window.matchMedia("(max-width: 899px)").matches;
+  const otherMode = (m = state.routeMode) => (m === "kortast" ? "lugnast" : "kortast");
+  const mins = (km) => Math.round((km / speed()) * 60);
+  const fmtKm = (km) => `${km < 10 ? fmt1.format(km) : fmt0.format(km)} km`;
+  const fmtDur = (m) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`);
 
   // Räkna direkt när en plats valts och båda fälten är ifyllda – det finns ingen räkna-knapp.
   function autoCalculate() {
@@ -449,17 +457,25 @@
     state.calculating = true;
     try {
       const [a, b] = await Promise.all([resolvePlace("from", els.from), resolvePlace("to", els.to)]);
-      const r = await getRoute(a, b);
+      const mode = state.routeMode;
+      const r = await getRoute(a, b, mode);
       if (seq !== calcSeq) return;
+      state.routes = { [mode]: r };
+      state.altState = "loading";
       state.route = { ...r, a, b };
       els.results.classList.remove("stale");
       $("map-wrap").classList.remove("stale");
       if (!state.departTouched) setNow();
       els.results.hidden = false;
       renderResult();
-      drawMap();
+      // På mobilen scrollar sidan först ner till kartan – vänta med animationen så att den syns
+      const delay = isMobileLayout() ? 650 : 0;
+      drawMap(delay);
+      countUpCost(delay);
       updateNavLinks();
-      if (window.matchMedia("(max-width: 899px)").matches) {
+      addRecents(a, b);
+      loadAlternative(seq, a, b, mode);
+      if (isMobileLayout()) {
         softScrollTo($("map-wrap"));
       } else {
         // Dator: se till att resultatet syns i vänsterkolumnen
@@ -480,8 +496,72 @@
     }
   }
 
+  // Det andra vägvalet hämtas i bakgrunden, så att första svaret kommer lika snabbt som förut
+  async function loadAlternative(seq, a, b, mode) {
+    const other = otherMode(mode);
+    try {
+      const r = await getRoute(a, b, other);
+      if (seq !== calcSeq) return;
+      state.routes[other] = r;
+      state.altState = "ok";
+    } catch {
+      if (seq !== calcSeq) return;
+      state.altState = "failed";
+    }
+    renderRouteChoice();
+    drawAlt(true);
+  }
+
+  // Rutorna under kartan: valt vägval med sträcka och tid, det andra med skillnaden
+  function renderRouteChoice() {
+    const cur = state.routes && state.routes[state.routeMode];
+    for (const mode of ["kortast", "lugnast"]) {
+      const el = $(`rc-${mode}`);
+      const btn = el.parentElement;
+      const r = state.routes && state.routes[mode];
+      btn.disabled = false;
+      if (!cur) { el.textContent = ""; continue; }
+      if (mode === state.routeMode) {
+        el.innerHTML = `${fmtKm(r.km)}${SEP}${fmtDur(mins(r.km))}`;
+      } else if (r) {
+        const dKm = r.km - cur.km;
+        const dMin = mins(r.km) - mins(cur.km);
+        if (Math.abs(dKm) < 0.1) el.textContent = "Samma väg";
+        else {
+          const sign = dKm > 0 ? "+" : "−";
+          el.innerHTML = `${sign}${fmtKm(Math.abs(dKm))}${SEP}${sign}${fmtDur(Math.abs(dMin))}`;
+        }
+      } else if (state.altState === "loading") {
+        el.textContent = "Räknar…";
+      } else {
+        el.textContent = "Gick inte att räkna";
+        btn.disabled = true;
+      }
+    }
+  }
+
+  // Kostnaden räknas upp till sitt värde när en ny resa räknats ut
+  function countUpCost(delay, dur = 900) {
+    if (reducedMotion() || !state.route) return;
+    const seq = countSeq;
+    const final = els.rCost.textContent;
+    const to = parseInt(final.replace(/\D/g, ""), 10) || 0;
+    const t0 = performance.now() + delay;
+    els.rCost.textContent = "0 kr";
+    const step = (now) => {
+      if (seq !== countSeq) return;
+      const k = Math.max(0, Math.min(1, (now - t0) / dur));
+      els.rCost.textContent = `${fmt0.format(Math.round(to * (1 - Math.pow(1 - k, 3))))} kr`;
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    // Reserv om webbläsaren pausar animationer: visa alltid rätt slutvärde
+    setTimeout(() => { if (seq === countSeq) els.rCost.textContent = final; }, delay + dur + 300);
+  }
+
   function renderResult() {
     if (!state.route) return;
+    countSeq++; // avbryter en pågående uppräkning av kostnaden
     const km = state.route.km;
     const liters = (km / 10) * state.consumption;
     const cost = liters * currentPrice();
@@ -495,20 +575,22 @@
       ? `${minutes}<small>min</small>`
       : `${Math.floor(minutes / 60)}<small>h</small>&nbsp;${String(minutes % 60).padStart(2, "0")}<small>min</small>`;
     const songs = Math.max(1, Math.round(minutes / 3.5));
-    els.rSongs.textContent = `≈ ${songs} ${songs === 1 ? "låt" : "låtar"} i stereon`;
+    els.rSongs.textContent = `≈ ${songs} ${songs === 1 ? "låt" : "låtar"}`;
+    els.rMil.textContent = `${fmt1.format(km / 10)} mil`;
 
     const [hh, mm] = (els.depart.value || "00:00").split(":").map(Number);
     const dep = new Date(); dep.setHours(hh, mm, 0, 0);
     const arr = new Date(dep.getTime() + minutes * 60000);
     els.rArrive.textContent = arr.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
     const days = Math.round((new Date(arr).setHours(0, 0, 0, 0) - new Date(dep).setHours(0, 0, 0, 0)) / 864e5);
-    els.rDay.textContent = days === 0 ? `om du drar ${els.depart.value}` : days === 1 ? "imorgon" : `om ${days} dagar`;
+    els.rDay.textContent = days === 0 ? `avresa ${els.depart.value}` : days === 1 ? "imorgon" : `om ${days} dagar`;
+    renderRouteChoice();
   }
 
   // ---------- Karta ----------
   // Kartan visas från start med en utzoomad bild av Sverige och ritar sedan upp rutten.
   const SWEDEN_BOUNDS = [[55.2, 10.9], [69.1, 24.2]];
-  let map, layer, lastBounds = null;
+  let map, layer, altLayer, lastBounds = null;
 
   function initMap() {
     if (map || !window.L) return;
@@ -529,26 +611,80 @@
     map.fitBounds(lastBounds, { padding: [8, 8], animate: false });
   }
 
-  function drawMap() {
+  function drawMap(delay = 0, dur = 1300) {
     $("map-wrap").classList.add("shown"); // på mobil är kartan dold tills det finns en rutt
     initMap();
     if (!map) return;
     if (layer) layer.remove();
+    if (altLayer) { altLayer.remove(); altLayer = null; }
     const { coords, a, b } = state.route;
     const bounds = L.latLngBounds(coords);
+    const alt = state.routes && state.routes[otherMode()];
+    if (alt) bounds.extend(L.latLngBounds(alt.coords));
     // Sätt vyn innan lagren läggs till, annars kan Leaflet rita mot en odefinierad zoom.
     map.invalidateSize();
     map.fitBounds(bounds, { padding: [28, 28], animate: false });
-    const pin = (cls) => L.divIcon({ className: "", html: `<span class="pin ${cls}"></span>`, iconSize: [22, 22], iconAnchor: [11, 11] });
+    const animate = !reducedMotion();
+    const pin = (cls, style = "") => L.divIcon({ className: "", html: `<span class="pin ${cls}" style="${style}"></span>`, iconSize: [22, 22], iconAnchor: [11, 11] });
+    const glow = L.polyline(coords, { color: "#FF4FA3", weight: 10, opacity: 0.25 });
+    const main = L.polyline(coords, { color: "#D4FF3A", weight: 4.5, opacity: 1, lineJoin: "round" });
     layer = L.layerGroup([
-      L.polyline(coords, { color: "#FF4FA3", weight: 10, opacity: 0.25 }),
-      L.polyline(coords, { color: "#D4FF3A", weight: 4.5, opacity: 1, lineJoin: "round" }),
+      glow, main,
       L.marker([a.lat, a.lon], { icon: pin("pin-from") }),
-      L.marker([b.lat, b.lon], { icon: pin("pin-to") }),
+      L.marker([b.lat, b.lon], { icon: animate ? pin("pin-to pop", `--d:${delay + dur - 150}ms`) : pin("pin-to") }),
     ]).addTo(map);
     lastBounds = bounds;
     $("map-hint").hidden = true;
     $("map-wrap").classList.remove("stale");
+    drawAlt(false);
+    if (animate) {
+      drawLine([glow, main], delay, dur);
+      // Reserv om webbläsaren pausar animationer: målnålen ska alltid synas
+      const group = layer;
+      setTimeout(() => group.eachLayer((l) => {
+        const pinEl = l.getElement && l.getElement() && l.getElement().querySelector && l.getElement().querySelector(".pin.pop");
+        if (pinEl) pinEl.classList.remove("pop");
+      }), delay + dur + 700);
+    }
+  }
+
+  // Det andra vägvalet: svag prickad linje under den valda rutten. Ett tryck på linjen byter vägval.
+  function drawAlt(refit) {
+    if (altLayer) { altLayer.remove(); altLayer = null; }
+    const other = otherMode();
+    const r = state.routes && state.routes[other];
+    if (!map || !r || !state.route) return;
+    if (Math.abs(r.km - state.route.km) < 0.1) return; // samma väg – inget att visa
+    altLayer = L.polyline(r.coords, { color: "#D4FF3A", weight: 4, opacity: 0.55, dashArray: "1 9", lineCap: "round" }).addTo(map);
+    altLayer.bringToBack();
+    altLayer.on("click", () => setRouteMode(other, true));
+    if (refit) {
+      const bounds = L.latLngBounds(state.route.coords).extend(altLayer.getBounds());
+      lastBounds = bounds;
+      if (!map.getBounds().contains(altLayer.getBounds())) map.fitBounds(bounds, { padding: [28, 28] });
+    }
+  }
+
+  // Ritar upp linjerna längs vägen. pathLength=1 gör att animationen tål att kartan zoomas under tiden.
+  function drawLine(lines, delay, dur) {
+    lines.forEach((line) => {
+      const p = line.getElement && line.getElement();
+      if (!p || !p.animate) return;
+      p.setAttribute("pathLength", "1");
+      p.style.strokeDasharray = "1";
+      const an = p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }],
+        { duration: dur, delay, easing: "cubic-bezier(.3, .1, .2, 1)", fill: "backwards" });
+      let cleaned = false;
+      const clean = () => {
+        if (cleaned) return;
+        cleaned = true;
+        p.removeAttribute("pathLength");
+        p.style.strokeDasharray = "";
+      };
+      an.onfinish = clean;
+      // Reserv om webbläsaren pausar animationer: linjen ska alltid bli hel
+      setTimeout(() => { try { an.cancel(); } catch { /* ignorera */ } clean(); }, delay + dur + 400);
+    });
   }
 
   // Passa in rutten (eller Sverige) igen när kartans storlek ändras (layouten sätter sig, telefonen vrids).
@@ -658,16 +794,19 @@
   desktopQuery.addEventListener?.("change", (e) => { if (e.matches) initMap(); });
 
   // ---------- Vägval ----------
-  const ROUTE_HINTS = {
-    kortast: "Snabbast – kan gå på större vägar där du får köra.",
-    lugnast: "Mindre vägar med lugnare trafik – oftast lite längre.",
-  };
-  function setRouteMode(mode, recalc) {
+  // Båda vägvalen hämtas vid varje sökning, så ett byte går direkt utan nytt anrop.
+  function setRouteMode(mode, user) {
     state.routeMode = mode;
     routeButtons.forEach((b) => b.setAttribute("aria-checked", String(b.dataset.route === mode)));
-    $("route-hint").textContent = ROUTE_HINTS[mode];
+    if (!user) return;
     save();
-    if (recalc && state.route) calculate();
+    if (!state.route) return;
+    const r = state.routes && state.routes[mode];
+    if (!r) { calculate(); return; }
+    state.route = { ...r, a: state.route.a, b: state.route.b };
+    renderResult();
+    drawMap(0, 700);
+    updateNavLinks();
   }
   routeButtons.forEach((b) => b.addEventListener("click", () => {
     if (b.dataset.route !== state.routeMode) setRouteMode(b.dataset.route, true);
@@ -690,6 +829,189 @@
   setRouteMode(state.routeMode, false);
   setFuel(state.fuel);
   loadPrices();
+
+  // ---------- Sparade och senaste platser ----------
+  // Sparas bara i den här webbläsaren (localStorage). Hem och Skolan väljer man själv, Senaste fylls på automatiskt.
+  const SLOTS = [["hem", "Hem"], ["skolan", "Skolan"]];
+  const svg = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+  const ICON = {
+    hem: svg('<path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/>'),
+    skolan: svg('<path d="M3 9l9-5 9 5-9 5-9-5Z"/><path d="M7 12v4c2 2 8 2 10 0v-4"/>'),
+    clock: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+    plus: svg('<path d="M12 5v14M5 12h14"/>'),
+    edit: svg('<path d="M4 20h4L19 9l-4-4L4 16v4Z"/>'),
+  };
+  let slots = (saved.slots && typeof saved.slots === "object") ? saved.slots : {};
+  let recent = Array.isArray(saved.recent) ? saved.recent : [];
+  const placesBox = $("places");
+  const placesSheet = $("places-sheet");
+
+  const isMyPos = (p) => p.main === "Min position";
+  const placeName = (p) => p.shareName || (isMyPos(p) ? "min plats" : p.main);
+  // Bara det som behövs sparas: namn och koordinater
+  function slim(p) {
+    return {
+      lat: p.lat, lon: p.lon, main: placeName(p), sub: p.sub || "",
+      label: isMyPos(p) ? String(p.label).replace(/^Min position · /, "") : p.label,
+    };
+  }
+  const samePlace = (p, q) => p && q && distKm([p.lat, p.lon], [q.lat, q.lon]) < 0.2;
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function chip(cls, icon, text, label, onClick) {
+    const b = el("button", `pchip ${cls}`);
+    b.type = "button";
+    b.innerHTML = icon;
+    if (text) b.append(el("span", "", text));
+    if (label) b.setAttribute("aria-label", label);
+    b.addEventListener("click", onClick);
+    placesBox.append(b);
+  }
+
+  function renderPlaces() {
+    placesBox.innerHTML = "";
+    SLOTS.forEach(([key, name]) => {
+      const p = slots[key];
+      if (p) chip("", ICON[key], name, `${name}: ${p.label}`, () => usePlace(p));
+      else chip("empty", ICON.plus, name, `Spara ${name}`, openPlaces);
+    });
+    recent.slice(0, 3).forEach((p) => chip("recent", ICON.clock, p.main, `Senaste: ${p.label}`, () => usePlace(p)));
+    if (SLOTS.some(([k]) => slots[k]) || recent.length) chip("tool", ICON.edit, "", "Ändra sparade platser", openPlaces);
+  }
+
+  // Fyller start om den är tom, annars mål – och räknar direkt när båda finns
+  function usePlace(p) {
+    const key = els.from.value.trim() ? "to" : "from";
+    state.places[key] = { ...p };
+    els[key].value = p.main;
+    els[key].title = p.label;
+    hideError();
+    markStale();
+    autoCalculate();
+  }
+
+  function addRecents(a, b) {
+    for (const p of [a, b]) {
+      if (!p || isMyPos(p) || SLOTS.some(([k]) => samePlace(slots[k], p))) continue;
+      const item = slim(p);
+      recent = [item, ...recent.filter((r) => r.label !== item.label && !samePlace(r, item))].slice(0, 5);
+    }
+    save({ recent });
+    renderPlaces();
+  }
+
+  function openPlaces() {
+    const body = $("places-body");
+    body.innerHTML = "";
+    const cands = [["start", state.places.from], ["mål", state.places.to]].filter(([, p]) => p);
+    SLOTS.forEach(([key, name]) => {
+      const box = el("div", "slot");
+      box.append(el("b", "", name), el("p", "", slots[key] ? slots[key].label : "Inte sparad"));
+      const btns = el("div", "slot-btns");
+      cands.forEach(([what, p]) => {
+        const b = el("button", "", `Spara ${what}: ${placeName(p)}`);
+        b.type = "button";
+        b.addEventListener("click", () => { slots = { ...slots, [key]: slim(p) }; persistPlaces(); });
+        btns.append(b);
+      });
+      if (slots[key]) {
+        const b = el("button", "danger", "Ta bort");
+        b.type = "button";
+        b.addEventListener("click", () => { const next = { ...slots }; delete next[key]; slots = next; persistPlaces(); });
+        btns.append(b);
+      }
+      if (btns.children.length) box.append(btns);
+      body.append(box);
+    });
+    if (recent.length) {
+      const box = el("div", "slot");
+      box.append(el("b", "", "Senaste"), el("p", "", recent.map((p) => p.main).join(", ")));
+      const btns = el("div", "slot-btns");
+      const b = el("button", "danger", "Rensa senaste");
+      b.type = "button";
+      b.addEventListener("click", () => { recent = []; persistPlaces(); });
+      btns.append(b);
+      box.append(btns);
+      body.append(box);
+    }
+    body.append(el("p", "sheet-info", cands.length
+      ? "Platserna sparas bara i den här webbläsaren."
+      : "Fyll i platsen som start eller mål först. Sedan kan du spara den som Hem eller Skolan här."));
+    if (!placesSheet.open) { if (placesSheet.showModal) placesSheet.showModal(); else placesSheet.setAttribute("open", ""); }
+  }
+  function persistPlaces() {
+    recent = recent.filter((r) => !SLOTS.some(([k]) => samePlace(slots[k], r)));
+    save({ slots, recent });
+    renderPlaces();
+    openPlaces(); // rita om rutan med nya värden
+  }
+  $("places-ok").addEventListener("click", () => (placesSheet.close ? placesSheet.close() : placesSheet.removeAttribute("open")));
+  placesSheet.addEventListener("click", (e) => {
+    const r = placesSheet.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) placesSheet.close();
+  });
+  renderPlaces();
+
+  // ---------- Dela resan ----------
+  // Länken innehåller ortsnamn och koordinater, så mottagaren får exakt samma resa.
+  // Egen position avrundas till ungefär 100 meter i länken.
+  function shareData() {
+    const { a, b } = state.route;
+    const minutes = mins(state.route.km);
+    const [hh, mm] = (els.depart.value || "00:00").split(":").map(Number);
+    const dep = new Date(); dep.setHours(hh, mm, 0, 0);
+    const arr = new Date(dep.getTime() + minutes * 60000).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+    const when = state.departTouched ? `kl. ${els.depart.value}` : "nu";
+    const text = `Åker från ${placeName(a)} ${when}, framme i ${placeName(b)} ca ${arr}.`;
+    const pos = (p) => (isMyPos(p) ? `${p.lat.toFixed(3)},${p.lon.toFixed(3)}` : ll([p.lat, p.lon]));
+    const q = new URLSearchParams({ fran: placeName(a), till: placeName(b), f: pos(a), t: pos(b) });
+    if (state.routeMode === "lugnast") q.set("v", "lugnast");
+    const base = location.protocol === "file:" ? "https://epa.junestaden.se/" : location.origin + location.pathname;
+    return { text, url: `${base}?${q}` };
+  }
+  $("share").addEventListener("click", async () => {
+    if (!state.route) return;
+    const data = shareData();
+    if (navigator.share) {
+      try { await navigator.share({ text: data.text, url: data.url }); } catch { /* användaren avbröt */ }
+      return;
+    }
+    // Dator utan delningsmeny: kopiera text och länk
+    const full = `${data.text} ${data.url}`;
+    try {
+      await navigator.clipboard.writeText(full);
+      $("share-label").textContent = "Kopierat";
+      setTimeout(() => { $("share-label").textContent = "Dela"; }, 2000);
+    } catch {
+      window.prompt("Kopiera texten:", full);
+    }
+  });
+
+  // Öppnad via en delad länk: fyll i resan och räkna direkt
+  (function loadSharedTrip() {
+    const q = new URLSearchParams(location.search);
+    const till = (q.get("till") || "").trim().slice(0, 80);
+    const fran = (q.get("fran") || "").trim().slice(0, 80);
+    if (!till) return;
+    const parse = (v, name) => {
+      const m = /^(-?\d{1,2}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)$/.exec(v || "");
+      if (!m || !name) return null;
+      const lat = Number(m[1]), lon = Number(m[2]);
+      if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+      return { lat, lon, main: name, label: name, sub: "" };
+    };
+    if (fran) { els.from.value = fran; state.places.from = parse(q.get("f"), fran); }
+    els.to.value = till;
+    state.places.to = parse(q.get("t"), till);
+    if (q.get("v") === "lugnast" || q.get("v") === "kortast") setRouteMode(q.get("v"), false);
+    try { history.replaceState(null, "", location.pathname); } catch { /* ignorera */ }
+    if (fran) calculate();
+  })();
 
   // ---------- Installera som app ----------
   // Android/Chrome: knappen öppnar telefonens egen installationsruta direkt (beforeinstallprompt).
