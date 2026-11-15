@@ -1,21 +1,24 @@
 # EPAkollen
 
-Webbapp (PWA) som räknar ut restid, ankomsttid och bränslekostnad för en EPA-traktor.
-30 km/h, rutt utan motorväg och motortrafikled.
+Webbapp (PWA) som räknar ut rutt, restid, ankomsttid och bränslekostnad för EPA-traktor,
+A-traktor (30 km/h) och mopedbil (45 km/h). Rutten undviker motorväg och motortrafikled.
+Du kan välja mellan två vägval (kortast och lugnast), spara Hem och Skolan, och dela resan som en länk.
+
+Adress: **https://epa.junestaden.se**
 
 ## Tjänster som används (gratis, ingen API-nyckel)
 - **Rutt:** Valhalla (valhalla1.openstreetmap.de), profil `motor_scooter` som följer mopedregler
 - **Platssök / min position:** Photon (photon.komoot.io)
-- **Karta:** Esri Dark Gray via Leaflet – fungerar även när filen öppnas direkt från disken
+- **Karta:** Esri Dark Gray via Leaflet, fungerar även när filen öppnas direkt från disken
 - **Bränslepris:** rikssnitt från bensinpriser.nu, sparat i `prices.js`
 
-## Lägga upp den (krävs för att kunna installera på mobilen)
-Installation som app och "Min plats" kräver https. Enklast är GitHub Pages:
+## Publicering
+Sidan serveras av **Cloudflare Pages** (projektet `epakollen`) och publiceras automatiskt vid varje push till `main`.
+Ingen build: rotmappen är utdata. Installation som app och "Min plats" kräver https, vilket Cloudflare ger.
 
-1. Skapa ett repo på GitHub och ladda upp innehållet i den här mappen.
-2. Settings → Pages → Deploy from branch → `main` / root.
-3. Settings → Actions → General → Workflow permissions → "Read and write".
-4. Workflowen `.github/workflows/prices.yml` uppdaterar `prices.js` två gånger per dag.
+Workflowen `.github/workflows/prices.yml` uppdaterar `prices.js` två gånger per dag.
+Den kräver att Settings → Actions → General → Workflow permissions är "Read and write".
+Filen `CNAME` är en rest från GitHub Pages och används inte av Cloudflare.
 
 Installera på mobilen: öppna sidan → Dela → "Lägg till på hemskärmen" (iPhone) eller
 menyn → "Installera app" (Android).
@@ -25,3 +28,4 @@ menyn → "Installera app" (Android).
 python -m http.server 8765
 ```
 Öppna http://localhost:8765. Uppdatera priser manuellt: `python scripts/update_prices.py`.
+Höj `CACHE` i `sw.js` när du ändrar appens filer, annars visar installerade appar den gamla versionen.
